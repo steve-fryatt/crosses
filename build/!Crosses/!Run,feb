@@ -1,0 +1,6 @@
+IconSprites <Obey$Dir>.!Sprites
+|
+Set Cross$Dir <Obey$Dir>
+|
+WimpSlot -min 64K -max 64K
+Run <Cross$Dir>.!RunImage

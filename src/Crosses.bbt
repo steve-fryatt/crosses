@@ -1,0 +1,352 @@
+REM XOX
+REM MAIN PROGRAM
+LIBRARY "BASIC:LegacyWimp"
+LIBRARY "BASIC:Legacy3D"
+ON ERROR err%=FNreport(255,REPORT$+" at line "+STR$(ERL),0,app$,1,0) : SYS "Wimp_CloseDown" : END
+PROC3D_init
+PROCinit
+PROCwindows
+PROCicons
+WHILE NOT quit%
+PROCpoll
+ENDWHILE
+:
+SYS "Wimp_CloseDown"
+:
+END
+
+DEF PROCinit
+quit%=FALSE : app$="Crosses"
+DIM block% 255,safeblock% 255
+SYS "Wimp_Initialise",200,&4B534154,app$
+caracterwidth=1280/20 : characterheight=32
+
+DIM subscripts(23),constinant(12),board(8),horisontal(8),vertical(8),count(12)
+DATA 0,1,2,3,4,5,6,7,8,0,3,6,1,4,7,2,5,8,0,4,8,2,4,6
+FOR I=0 TO 23:READ subscripts(I):NEXT I
+DATA 0,7,31,128,-15,0,0,0,-63,0,0,0,0
+FOR I=0 TO 12:READ constinant(I):NEXT I
+DATA 0,1,4,192
+READ blank,nought,cross,size
+FOR I=0 TO 8
+horisontal(I)=size*(1+(I MOD 3))
+vertical(I)=size*(3-(I DIV 3))
+NEXT I
+ibar%=FNicon_bar("!"+app$)
+play%=FALSE
+comp%=FALSE
+games%=0
+ENDPROC
+
+DEF PROCwindows
+board%=FNcreate_window(400,300,348,476,0,0,"Crosses",1,1,1,1,0,0,0,0,0,0,0,0,1,1)
+DIM name% 30,purp% 30,auth% 30,vers% 30
+$name%=app$
+$purp%="Play Noughts and Crosses"
+$auth%="© Stephen Fryatt, 1993"
+$vers%="1.01 (20-Dec-2004)"
+info%=FNinfo_window(name%,purp%,auth%,vers%,30)
+options%=FNcreate_dialogue(672,488,"Options")
+DIM imenu% 100
+iw%=0 : ie%=0
+PROCinit_menu(imenu%,iw%,ie%,"Crosses")
+PROCst_menu_item(imenu%,iw%,ie%,"Info",0,0,0,0,info%)
+PROCst_menu_item(imenu%,iw%,ie%,"Options",0,0,0,0,options%)
+PROCst_menu_item(imenu%,iw%,ie%,"Quit",0,0,0,1,-1)
+ENDPROC
+
+DEF PROCicons
+DIM i0% 1,i1% 1,i2% 1,i3% 1,i4% 1,i5% 1,i6% 1,i7% 1,i8% 1
+$i0%="-"
+$i1%="-"
+$i2%="-"
+$i3%="-"
+$i4%="-"
+$i5%="-"
+$i6%="-"
+$i7%="-"
+$i8%="-"
+icon%=FNcreate_icon(board%,3*4,-28*4,25*4,25*4,"",i0%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,31*4,-28*4,25*4,25*4,"",i1%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,59*4,-28*4,25*4,25*4,"",i2%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,3*4,-56*4,25*4,25*4,"",i3%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,31*4,-56*4,25*4,25*4,"",i4%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,59*4,-56*4,25*4,25*4,"",i5%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,3*4,-84*4,25*4,25*4,"",i6%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,31*4,-84*4,25*4,25*4,"",i7%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+icon%=FNcreate_icon(board%,59*4,-84*4,25*4,25*4,"",i8%,1,2,0,1,0,1,1,0,1,0,3,1,0,0,0,0,0)
+DIM message% 19
+$message%=""
+icon%=FN3D_in(board%,3,-100,81,13,message%,20)
+DIM xscore% 2,oscore% 2
+$xscore%="0" : $oscore%="0"
+icon%=FN3D_in(board%,3,-116,12,13,xscore%,3)
+icon%=FN3D_in(board%,72,-116,12,13,oscore%,3)
+PROCset_icon_colour(board%,10,11,1)
+PROCset_icon_colour(board%,11,10,1)
+DIM scores% 14
+$scores%="Scores"
+icon%=FNcreate_icon(board%,15*4,-116*4,57*4,13*4,"",scores%,-1,15,1,0,0,1,1,0,1,0,3,1,0,0,0,7,0)
+:
+
+PROC3D_border_name(options%,2,-53,80,45,"Player X")
+PROC3D_border_name(options%,2,-120,80,59,"Player O")
+DIM val% 7 : $val%="Soff,on"
+DIM b1% 15 : $b1%="Computer player"
+icon%=FNcreate_icon(options%,6*4,-83*4,74*4,13*4,"",b1%,val%,16,1,1,0,0,1,0,1,0,3,1,0,0,0,7,1)
+DIM namex% 9,nameo% 9,b2% 13
+$b2%="Player's name"
+$namex%=""
+$nameo%=""
+icon%=FNcreate_icon(options%,6*4,-30*4,68*4,13*4,"",b2%,val%,14,1,1,0,0,1,0,1,0,3,1,0,0,0,7,1)
+icon%=FNcreate_icon(options%,6*4,-97*4,68*4,13*4,"",b2%,val%,14,1,1,0,0,1,0,1,0,3,1,0,0,0,7,1)
+icon%=FN3D_writeable(options%,8,-47,68,13,namex%,10)
+icon%=FN3D_writeable(options%,8,-114,68,13,nameo%,10)
+PROCset_icon_state(options%,9,0,1,0)
+PROCset_icon_state(options%,10,0,1,0)
+icon%=FN3D_border_out(options%,86,-120,80,26)
+PROC3D_border_name(options%,86,-90,80,82,"Options")
+icon%=FN3D_action(options%,100,-34,52,15,"Reset Scores")
+icon%=FN3D_action(options%,100,-53,52,15,"New Game")
+DIM b3% 11 : $b3%="Score draws"
+DIM b4% 11 : $b4%="Count games"
+icon%=FNcreate_icon(options%,95*4,-69*4,68*4,13*4,"",b3%,val%,12,1,1,0,0,1,0,1,0,3,1,0,0,0,7,1)
+icon%=FNcreate_icon(options%,95*4,-83*4,68*4,13*4,"",b4%,val%,12,1,1,0,0,1,0,1,0,3,1,0,0,0,7,1)
+icon%=FN3D_default(options%,104,-114,45,13,"OK")
+ENDPROC
+
+DEF PROCpoll
+SYS "Wimp_Poll",0,block% TO reason%
+CASE reason% OF
+WHEN 2 : SYS "Wimp_OpenWindow",,block%
+WHEN 3 : SYS "Wimp_CloseWindow",,block%
+WHEN 6 : PROCmouse_click(block%!12,block%!16,block%!8)
+WHEN 8 : SYS "Wimp_ProcessKey",block%!24
+WHEN 9 : IF !block%=2 THEN quit%=TRUE
+WHEN 17,18 : IF block%!16=0 THEN quit%=TRUE
+ENDCASE
+ENDPROC
+:
+DEF PROCnew_game
+moves=0
+$i0%="-"
+$i1%="-"
+$i2%="-"
+$i3%="-"
+$i4%="-"
+$i5%="-"
+$i6%="-"
+$i7%="-"
+$i8%="-"
+board()=0
+play%=TRUE
+player%=-1
+IF FNicon_state(options%,7) THEN
+$message%=$namex%+" to move"
+ELSE
+$message%="X to move"
+ENDIF
+PROCset_icon_colour(board%,9,11,1)
+ENDPROC
+:
+DEF PROCmouse_click(window%,icon%,buttons%)
+CASE window% OF
+   WHEN -2
+      CASE buttons% OF
+         WHEN 1,4
+            IF NOT play% THEN
+            PROCnew_game
+            PROCopen_window(board%)
+            PROCredraw_window(board%)
+            ELSE
+            PROCopen_window(board%)
+            ENDIF
+         WHEN 2
+            PROCdisplay_bar_menu(imenu%,3,0,!block%)
+         ENDCASE
+   WHEN board%
+      CASE icon% OF
+         WHEN 0,1,2,3,4,5,6,7,8
+            IF play% AND board(icon%)=0 THEN
+            N=icon%
+            IF player% PROCdrawX ELSE PROCdrawO
+            IF player% THEN moves+=1
+            player%=NOT player%
+            PROCcomp
+            IF (NOT xwin) AND (NOT owin) THEN
+            IF moves>=5 THEN PROCdraw
+            ENDIF
+            IF moves<5 AND (NOT xwin) AND comp% PROCdrawO : player%=NOT player%
+            IF xwin THEN PROCxwin
+            IF owin THEN PROCowin
+            ENDIF
+         ENDCASE
+   WHEN options%
+      CASE icon% OF
+         WHEN 6
+            PROCset_icon_state(options%,6,ABS(FNicon_state(options%,6)=0),0,0)
+            comp%=NOT comp%
+         WHEN 7
+            PROCset_icon_state(options%,7,ABS(FNicon_state(options%,7)=0),0,0)
+            PROCset_icon_state(options%,9,0,ABS(FNicon_state(options%,7)=0),0)
+         WHEN 8
+            PROCset_icon_state(options%,8,ABS(FNicon_state(options%,8)=0),0,0)
+            PROCset_icon_state(options%,10,0,ABS(FNicon_state(options%,8)=0),0)
+         WHEN 15
+            $xscore%="0"
+            $oscore%="0"
+            games%=0
+            IF FNicon_state(options%,18) THEN
+            $scores%="Scores (of 0)"
+            ENDIF
+            PROCredraw_window(board%)
+         WHEN 16
+            PROCnew_game
+            PROCredraw_window(board%)
+         WHEN 17
+            PROCset_icon_state(options%,17,ABS(FNicon_state(options%,17)=0),0,0)
+         WHEN 18
+            PROCset_icon_state(options%,18,ABS(FNicon_state(options%,18)=0),0,0)
+            IF FNicon_state(options%,18) THEN
+            $scores%="Scores (of "+STR$(games%)+")"
+            ELSE
+            $scores%="Scores"
+            ENDIF
+            PROCredraw_window(board%)
+         WHEN 19
+            PROCdisplay_menu(0,0,-1)
+         ENDCASE
+   ENDCASE
+ENDPROC
+:
+DEF PROCcomp
+max=-1000:xwin=FALSE:owin=FALSE
+FOR P=0 TO 8
+ IF board(P)=blank THEN
+  IF comp% THEN board(P)=nought
+  FOR I=1 TO 12:count(I)=0:NEXT I
+  FOR I=0 TO 21 STEP 3
+   type=board(subscripts(I))+board(subscripts(I+1))+board(subscripts(I+2))
+   count(type)=count(type)+1
+  NEXT I
+  IF count(3) owin=TRUE
+  IF count(12) xwin=TRUE
+  IF comp% THEN
+   score=0
+   FOR I=1 TO 8
+   score=score+count(I)*constinant(I)
+   NEXT I
+   IF score>max max=score:N=P
+  ENDIF
+  board(P)=blank
+ ELSE
+  FOR I=1 TO 12:count(I)=0:NEXT I
+  FOR I=0 TO 21 STEP 3
+   type=board(subscripts(I))+board(subscripts(I+1))+board(subscripts(I+2))
+   count(type)=count(type)+1
+  NEXT I
+  IF count(3) owin=TRUE
+  IF count(12) xwin=TRUE
+ ENDIF
+NEXT P
+IF xwin AND owin AND comp% THEN owin=FALSE
+ENDPROC
+:
+DEF PROCdrawX
+CASE N OF
+WHEN 0 : $i0%="x"
+WHEN 1 : $i1%="x"
+WHEN 2 : $i2%="x"
+WHEN 3 : $i3%="x"
+WHEN 4 : $i4%="x"
+WHEN 5 : $i5%="x"
+WHEN 6 : $i6%="x"
+WHEN 7 : $i7%="x"
+WHEN 8 : $i8%="x"
+ENDCASE
+board(N)=cross
+PROCset_icon_colour(board%,9,10,1)
+IF FNicon_state(options%,8) THEN
+$message%=$nameo%+" to move"
+ELSE
+$message%="O to move"
+ENDIF
+PROCredraw_window(board%)
+ENDPROC
+
+DEF PROCdrawO
+CASE N OF
+WHEN 0 : $i0%="0"
+WHEN 1 : $i1%="0"
+WHEN 2 : $i2%="0"
+WHEN 3 : $i3%="0"
+WHEN 4 : $i4%="0"
+WHEN 5 : $i5%="0"
+WHEN 6 : $i6%="0"
+WHEN 7 : $i7%="0"
+WHEN 8 : $i8%="0"
+ENDCASE
+board(N)=nought
+IF NOT owin THEN
+IF FNicon_state(options%,7) THEN
+$message%=$namex%+" to move"
+ELSE
+$message%="X to move"
+ENDIF
+ENDIF
+PROCset_icon_colour(board%,9,11,1)
+PROCredraw_window(board%)
+ENDPROC
+
+DEF PROCowin
+play%=FALSE
+IF FNicon_state(options%,8) THEN
+$message%=$nameo%+" wins game"
+ELSE
+$message%="O wins game"
+ENDIF
+PROCset_icon_colour(board%,9,10,1)
+IF LEN($oscore%)<3 THEN $oscore%=STR$(VAL($oscore%)+1)
+IF FNicon_state(options%,18) THEN
+IF games%<99 THEN games%+=1
+$scores%="Scores (of "+STR$(games%)+")"
+ELSE
+$scores%="Scores"
+ENDIF
+PROCredraw_window(board%)
+ENDPROC
+:
+DEF PROCxwin
+play%=FALSE
+IF FNicon_state(options%,7) THEN
+$message%=$namex%+" wins game"
+ELSE
+$message%="X wins game"
+ENDIF
+PROCset_icon_colour(board%,9,11,1)
+IF LEN($xscore%)<3 THEN $xscore%=STR$(VAL($xscore%)+1)
+IF FNicon_state(options%,18) THEN
+IF games%<99 THEN games%+=1
+$scores%="Scores (of "+STR$(games%)+")"
+ELSE
+$scores%="Scores"
+ENDIF
+PROCredraw_window(board%)
+ENDPROC
+:
+DEF PROCdraw
+play%=FALSE
+$message%="Game drawn"
+PROCset_icon_colour(board%,9,7,1)
+IF FNicon_state(options%,17) THEN
+IF LEN($xscore%)<3 THEN $xscore%=STR$(VAL($xscore%)+1)
+IF LEN($oscore%)<3 THEN $oscore%=STR$(VAL($oscore%)+1)
+ENDIF
+IF FNicon_state(options%,18) THEN
+IF games%<99 THEN games%+=1
+$scores%="Scores (of "+STR$(games%)+")"
+ELSE
+$scores%="Scores"
+ENDIF
+PROCredraw_window(board%)
+ENDPROC
