@@ -2,6 +2,12 @@ REM XOX
 REM MAIN PROGRAM
 LIBRARY "BASIC:LegacyWimp"
 LIBRARY "BASIC:Legacy3D"
+:
+REM These values get replaced by tokenize.
+:
+build_version$ = "1.10"
+build_date$ = "01 Jul 2009"
+:
 ON ERROR err%=FNreport(255,REPORT$+" at line "+STR$(ERL),0,app$,1,0) : SYS "Wimp_CloseDown" : END
 PROC3D_init
 PROCinit
@@ -40,12 +46,12 @@ ENDPROC
 
 DEF PROCwindows
 board%=FNcreate_window(400,300,348,476,0,0,"Crosses",1,1,1,1,0,0,0,0,0,0,0,0,1,1)
-DIM name% 30,purp% 30,auth% 30,vers% 30
+DIM name% 40,purp% 40,auth% 40,vers% 40
 $name%=app$
 $purp%="Play Noughts and Crosses"
-$auth%="© Stephen Fryatt, 1993"
-$vers%="1.01 (20-Dec-2004)"
-info%=FNinfo_window(name%,purp%,auth%,vers%,30)
+$auth%=CHR$(169) + " Stephen Fryatt, 1993-" + MID$(build_date$, 8)
+$vers%=build_version$+" ("+build_date$+")"
+info%=FNinfo_window(name%,purp%,auth%,vers%,40)
 options%=FNcreate_dialogue(672,488,"Options")
 DIM imenu% 100
 iw%=0 : ie%=0
