@@ -10,7 +10,7 @@
 =============================================================================
 Crosses - Noughts and Crosses                                    Version $$version$$
 
-(c) Stephen Fryatt, 1993                       $$date$$
+(c) Stephen Fryatt, 1993-2014                  $$date$$
 =============================================================================
 </literal>
 
@@ -20,13 +20,17 @@ Crosses - Noughts and Crosses                                    Version $$versi
 
 <chapter title="License" file="License">
 
-<cite>Crosses</cite> is <strong>Freeware</strong>.  Copyright is held by the author, Stephen Fryatt, 1993.
+<cite>Crosses</cite> is licensed under the EUPL, Version&nbsp;1.1 only (the &ldquo;Licence&rdquo;); you may not use this work except in compliance with the Licence.
 
-<cite>Crosses</cite> may be copied freely, so long as it remains unaltered with all its files and documentation intact.
+You may obtain a copy of the Licence at <link ref="#url http://joinup.ec.europa.eu/software/page/eupl">http://joinup.ec.europa.eu/software/page/eupl</link>
 
-If you wish to distribute <cite>Crosses</cite>, please contact me to get my permission. This is so that I can ensure that you have the latest version available.  <cite>Crosses</cite> may not be sold, although Public Domain libraries may charge for the cost of discs.
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an &ldquo;<strong>as is</strong>&rdquo; basis, <strong>without warranties or conditions of any kind</strong>, either express or implied.
 
-No guarantee is made as to the suitability or stability of <cite>Crosses</cite> for any particular purpose.  No liability can be accepted by the author for any loss or damage caused by the use of <cite>Crosses</cite>.
+See the Licence for the specific language governing permissions and limitations under the Licence.
+
+The source for <cite>Crosses</cite> can be found alongside this binary download, at <link ref="#url http://www.stevefryatt.org.uk/software">http://www.stevefryatt.org.uk/software</link>
+
+The necessary libraries and build tools can be found at <link ref="#url http://www.stevefryatt.org.uk/software/build">http://www.stevefryatt.org.uk/software/build</link>
 
 </chapter>
 
@@ -51,7 +55,7 @@ To install <cite>Crosses</cite> on a hard disc, copy the <file>!Crosses</file> a
 
 <subhead title="Changing the game options">
 
-Following the <menu>Options</menu> entry in the iconbar menu allows various things to be set up.  Selecting either of the <icon>Player's name</icon> options and typing a name into the box will replace the X and O in the messages in the main window.  You can make the computer play O by selecting <icon>Computer player</icon>. <icon>Score draws</icon> will give 1 point to each side in the event of a draw, <icon>Count games</icon> will keep a running total of how many you have played. <icon>Reset Scores</icon> and <icon>New Game</icon> do exactly as they say.
+Following the <menu>Options</menu> entry in the iconbar menu allows various things to be set up. Selecting either of the <icon>Player's name</icon> options and typing a name into the box will replace the X and O in the messages in the main window. You can make the computer play O by selecting <icon>Computer player</icon>. <icon>Score draws</icon> will give 1 point to each side in the event of a draw, <icon>Count games</icon> will keep a running total of how many you have played. <icon>Reset Scores</icon> and <icon>New Game</icon> do exactly as they say.
 
 When the game is over, clicking <mouse>select</mouse> on the iconbar will clear the board as well.
 
@@ -74,6 +78,14 @@ First public release.
 
 <list>
 <li>Fixed bug which prevented correct scoring if a human beat the computer.
+</list>
+
+<subhead title="Test Build">
+
+Development release for testing and feedback.
+
+<list>
+<li>Build system revised and license updated to EUPL.
 </list>
 
 </chapter>
