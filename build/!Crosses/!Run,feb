@@ -22,9 +22,9 @@
 | See the Licence for the specific language governing
 | permissions and limitations under the Licence.
 
-IconSprites <Obey$Dir>.!Sprites
+Set Crosses$Dir <Obey$Dir>
 |
-Set Cross$Dir <Obey$Dir>
+IconSprites <Crosses$Dir>.!Sprites
 |
 WimpSlot -min 64K -max 64K
-Run <Cross$Dir>.!RunImage
+Run <Crosses$Dir>.!RunImage

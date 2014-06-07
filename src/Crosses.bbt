@@ -75,10 +75,11 @@ $auth%=CHR$(169) + " Stephen Fryatt, 1993-" + MID$(build_date$, 8)
 $vers%=build_version$+" ("+build_date$+")"
 info%=FNinfo_window(name%,purp%,auth%,vers%,40)
 options%=FNcreate_dialogue(672,488,"Options")
-DIM imenu% 100
+DIM imenu% 124
 iw%=0 : ie%=0
 PROCinit_menu(imenu%,iw%,ie%,"Crosses")
 PROCst_menu_item(imenu%,iw%,ie%,"Info",0,0,0,0,info%)
+PROCst_menu_item(imenu%,iw%,ie%,"Help",0,0,0,0,-1)
 PROCst_menu_item(imenu%,iw%,ie%,"Options",0,0,0,0,options%)
 PROCst_menu_item(imenu%,iw%,ie%,"Quit",0,0,0,1,-1)
 ENDPROC
@@ -150,7 +151,11 @@ WHEN 2 : SYS "Wimp_OpenWindow",,block%
 WHEN 3 : SYS "Wimp_CloseWindow",,block%
 WHEN 6 : PROCmouse_click(block%!12,block%!16,block%!8)
 WHEN 8 : SYS "Wimp_ProcessKey",block%!24
-WHEN 9 : IF !block%=2 THEN quit%=TRUE
+WHEN 9
+ CASE !block% OF
+  WHEN 1 : OSCLI("%Filer_Run <Crosses$Dir>.!Help")
+  WHEN 3 : quit%=TRUE
+ ENDCASE
 WHEN 17,18 : IF block%!16=0 THEN quit%=TRUE
 ENDCASE
 ENDPROC
@@ -190,7 +195,7 @@ CASE window% OF
             PROCopen_window(board%)
             ENDIF
          WHEN 2
-            PROCdisplay_bar_menu(imenu%,3,0,!block%)
+            PROCdisplay_bar_menu(imenu%,4,0,!block%)
          ENDCASE
    WHEN board%
       CASE icon% OF
