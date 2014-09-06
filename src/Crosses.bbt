@@ -45,6 +45,10 @@ SYS "Wimp_CloseDown"
 END
 
 DEF PROCinit
+REM Disable unused dragging code in LegacyWimp library.
+drag_start% = -1
+drag_stop% = -1
+
 quit%=FALSE : app$="Crosses"
 DIM block% 255,safeblock% 255, a% 255
 SYS "Wimp_Initialise",200,&4B534154,app$
