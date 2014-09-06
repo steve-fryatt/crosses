@@ -24,6 +24,7 @@ REM permissions and limitations under the Licence.
 :
 LIBRARY "BASIC:LegacyWimp"
 LIBRARY "BASIC:Legacy3D"
+LIBRARY "BASIC:Url"
 :
 REM These values get replaced by tokenize.
 :
@@ -45,7 +46,7 @@ END
 
 DEF PROCinit
 quit%=FALSE : app$="Crosses"
-DIM block% 255,safeblock% 255
+DIM block% 255,safeblock% 255, a% 255
 SYS "Wimp_Initialise",200,&4B534154,app$
 caracterwidth=1280/20 : characterheight=32
 
@@ -156,7 +157,12 @@ WHEN 9
   WHEN 1 : OSCLI("%Filer_Run <Crosses$Dir>.!Help")
   WHEN 3 : quit%=TRUE
  ENDCASE
-WHEN 17,18 : IF block%!16=0 THEN quit%=TRUE
+WHEN 17,18
+ CASE block%!16 OF
+  WHEN 0      : quit%=TRUE
+  WHEN &4E383 : PROCurl_bounce(b%)
+ ENDCASE
+WHEN 19 : IF block%!16 = &4AF80 THEN PROCurl_bounce(b%)
 ENDCASE
 ENDPROC
 :
@@ -249,6 +255,11 @@ CASE window% OF
          WHEN 19
             PROCdisplay_menu(0,0,-1)
          ENDCASE
+   WHEN info%
+      IF buttons% = 4 AND icon% = 8 THEN
+         PROCurl_launch("http://www.stevefryatt.org.uk/software/games/")
+         PROCdisplay_menu(-1,0,0)
+      ENDIF
    ENDCASE
 ENDPROC
 :
