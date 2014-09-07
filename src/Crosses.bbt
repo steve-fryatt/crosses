@@ -186,7 +186,7 @@ REM
 REM \param text$		The text of the message to write.
 :
 DEF PROCwrite_message(text$)
-PROCset_indirected_icon_text(MainWindow%, 9, text$)
+PROCicon_set_indirected_text(MainWindow%, 9, text$)
 ENDPROC
 
 
@@ -198,13 +198,13 @@ REM \param oscore%		The score for player O.
 REM \param games%		The number of games played.
 :
 DEF PROCwrite_scores(xscore%, oscore%, games%)
-PROCset_indirected_icon_text(MainWindow%, 10, STR$(xscore%))
-PROCset_indirected_icon_text(MainWindow%, 11, STR$(oscore%))
+PROCicon_set_indirected_text(MainWindow%, 10, STR$(xscore%))
+PROCicon_set_indirected_text(MainWindow%, 11, STR$(oscore%))
 
 IF FNicon_selected(OptionsWindow%, 12) THEN
-	PROCset_indirected_icon_text(MainWindow%, 12, "Scores (of " + STR$(games%) + ")")
+	PROCicon_set_indirected_text(MainWindow%, 12, "Scores (of " + STR$(games%) + ")")
 ELSE
-	PROCset_indirected_icon_text(MainWindow%, 12, "Scores")
+	PROCicon_set_indirected_text(MainWindow%, 12, "Scores")
 ENDIF
 ENDPROC
 
