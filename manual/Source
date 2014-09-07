@@ -12,6 +12,7 @@ Crosses - Noughts and Crosses                                    Version $$versi
 
 (c) Stephen Fryatt, 1993-2014                  $$date$$
 =============================================================================
+
 </literal>
 
 
@@ -74,11 +75,12 @@ Here is a list of the versions of Crosses, along with all the changes made.
 First public release.
 
 
-<subhead title="0.10 (24 November 2002)">
+<subhead title="1.10 (24 December 2004)">
 
 <list>
 <li>Fixed bug which prevented correct scoring if a human beat the computer.
 </list>
+
 
 <subhead title="Test Build">
 
@@ -86,6 +88,9 @@ Development release for testing and feedback.
 
 <list>
 <li>Build system revised and license updated to EUPL.
+<li><menu>Help</menu> menu entry added to iconbar menu.
+<li><icon>Website</icon> button added to <window>program information</window> window.
+<li>Menus remain open when selections are made with <mouse>adjust</mouse>.
 </list>
 
 </chapter>
@@ -94,7 +99,6 @@ Development release for testing and feedback.
 
 
 <literal mode="Text">
-
 
 Updates and Contacting Me
 -------------------------
