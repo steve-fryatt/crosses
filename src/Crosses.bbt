@@ -55,7 +55,7 @@ END
 REM Initialise ourselves, internally and with the Wimp.
 :
 DEF PROCinitialise
-LOCAL resources$, task_name$, task_sprite$, indirected_data%, indirected_size%, ibar_icon%
+LOCAL i%, resources$, task_name$, task_sprite$, indirected_data%, indirected_size%, ibar_icon%
 
 REM Set up the quit flag and global data blocks.
 
