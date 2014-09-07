@@ -21,37 +21,76 @@ REM OR CONDITIONS OF ANY KIND, either express or implied.
 REM
 REM See the Licence for the specific language governing
 REM permissions and limitations under the Licence.
-:
+
 LIBRARY "BASIC:LegacyWimp"
 LIBRARY "BASIC:Legacy3D"
+LIBRARY "BASIC:Message"
+LIBRARY "BASIC:Resources"
 LIBRARY "BASIC:Url"
-:
+LIBRARY "BASIC:WimpError"
+
+PROCwimperror_initialise("Crosses", "!crosses")
+ON ERROR result% = FNwimperror_program : END
+
 REM These values get replaced by tokenize.
-:
+
 build_version$ = "1.10"
 build_date$ = "01 Jul 2009"
-:
-ON ERROR err%=FNreport(255,REPORT$+" at line "+STR$(ERL),0,app$,1,0) : SYS "Wimp_CloseDown" : END
+
 PROC3D_init
-PROCinit
+PROCinitialise
 PROCwindows
 PROCicons
-WHILE NOT quit%
-PROCpoll
+
+ON ERROR Quit% = FNwimperror_program
+
+WHILE NOT Quit%
+	PROCpoll
 ENDWHILE
-:
+
 SYS "Wimp_CloseDown"
-:
 END
 
-DEF PROCinit
-REM Disable unused dragging code in LegacyWimp library.
+
+REM Initialise ourselves, internally and with the Wimp.
+:
+DEF PROCinitialise
+LOCAL resources$, task_name$, task_sprite$
+
+REM Set up the quit flag and global data blocks.
+
+Quit%=FALSE
+
+DIM b% 255, q% 255, a% 255
+
+REM Keep the LegacyWimp libraries happy.
+
+safeblock% = q%
 drag_start% = -1
 drag_stop% = -1
 
-quit%=FALSE : app$="Crosses"
-DIM block% 255,safeblock% 255, a% 255
-SYS "Wimp_Initialise",200,&4B534154,app$
+REM Locate the application resources.
+
+resources$ = FNresources_find_territory_folder("<Crosses$Dir>.Resources")
+
+REM Load the messages file.
+
+PROCmessage_initialise(resources$ + "Messages")
+
+task_name$ = FNmessage_lookup("TaskName")
+task_sprite$ = FNmessage_lookup("TaskSpr")
+PROCwimperror_initialise(task_name$, task_sprite$)
+
+REM Initialise with the Wimp.
+
+q%!0 = &4E383
+q%!4 = &4AF80
+q%!8 = 0
+
+SYS "Wimp_Initialise", 310, &4B534154, task_name$, q%
+
+
+
 caracterwidth=1280/20 : characterheight=32
 
 DIM subscripts(23),constinant(12),board(8),horisontal(8),vertical(8),count(12)
@@ -65,7 +104,7 @@ FOR I=0 TO 8
 horisontal(I)=size*(1+(I MOD 3))
 vertical(I)=size*(3-(I DIV 3))
 NEXT I
-ibar%=FNicon_bar("!"+app$)
+ibar%=FNicon_bar(task_sprite$)
 play%=FALSE
 comp%=FALSE
 games%=0
@@ -74,7 +113,7 @@ ENDPROC
 DEF PROCwindows
 board%=FNcreate_window(400,300,348,476,0,0,"Crosses",1,1,1,1,0,0,0,0,0,0,0,0,1,1)
 DIM name% 40,purp% 40,auth% 40,vers% 40
-$name%=app$
+$name%="Crosses"
 $purp%="Play Noughts and Crosses"
 $auth%=CHR$(169) + " Stephen Fryatt, 1993-" + MID$(build_date$, 8)
 $vers%=build_version$+" ("+build_date$+")"
@@ -151,26 +190,26 @@ ENDPROC
 
 DEF PROCpoll
 LOCAL reopen%, reason%
-SYS "Wimp_Poll",0,block% TO reason%
+SYS "Wimp_Poll",0,b% TO reason%
 CASE reason% OF
-WHEN 2 : SYS "Wimp_OpenWindow",,block%
-WHEN 3 : SYS "Wimp_CloseWindow",,block%
-WHEN 6 : PROCmouse_click(block%!12,block%!16,block%!8)
-WHEN 8 : SYS "Wimp_ProcessKey",block%!24
+WHEN 2 : SYS "Wimp_OpenWindow",,b%
+WHEN 3 : SYS "Wimp_CloseWindow",,b%
+WHEN 6 : PROCmouse_click(b%!12,b%!16,b%!8)
+WHEN 8 : SYS "Wimp_ProcessKey",b%!24
 WHEN 9
- SYS "Wimp_GetPointerInfo",,safeblock%
- reopen%=(safeblock%!8 = 1)
- CASE !block% OF
+ SYS "Wimp_GetPointerInfo",,q%
+ reopen%=(q%!8 = 1)
+ CASE !b% OF
   WHEN 1 : OSCLI("%Filer_Run <Crosses$Dir>.!Help")
-  WHEN 3 : quit%=TRUE
+  WHEN 3 : Quit%=TRUE
  ENDCASE
  IF reopen% THEN PROCdisplay_menu(menuup%, 0, 0)
 WHEN 17,18
- CASE block%!16 OF
-  WHEN 0      : quit%=TRUE
+ CASE b%!16 OF
+  WHEN 0      : Quit%=TRUE
   WHEN &4E383 : PROCurl_bounce(b%)
  ENDCASE
-WHEN 19 : IF block%!16 = &4AF80 THEN PROCurl_bounce(b%)
+WHEN 19 : IF b%!16 = &4AF80 THEN PROCurl_bounce(b%)
 ENDCASE
 ENDPROC
 :
@@ -209,7 +248,7 @@ CASE window% OF
             PROCopen_window(board%)
             ENDIF
          WHEN 2
-            PROCdisplay_bar_menu(imenu%,4,0,!block%)
+            PROCdisplay_bar_menu(imenu%,4,0,!b%)
          ENDCASE
    WHEN board%
       CASE icon% OF
@@ -265,7 +304,7 @@ CASE window% OF
          ENDCASE
    WHEN info%
       IF buttons% = 4 AND icon% = 8 THEN
-         PROCurl_launch("http://www.stevefryatt.org.uk/software/games/")
+         PROCurl_launch(FNmessage_lookup("SupportURL"))
          PROCdisplay_menu(-1,0,0)
       ENDIF
    ENDCASE
