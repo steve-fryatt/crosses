@@ -52,6 +52,132 @@ SYS "Wimp_CloseDown"
 END
 
 
+REM Handle calls to Wimp_Poll and process the responses.
+:
+DEF PROCpoll
+LOCAL reason%
+
+SYS "Wimp_Poll", &3C01, b% TO reason%
+
+CASE reason% OF
+	WHEN 2		: SYS "Wimp_OpenWindow",,b%
+	WHEN 3		: SYS "Wimp_CloseWindow",,b%
+	WHEN 6		: PROCmouse_click(b%!12, b%!16, b%!8)
+	WHEN 8		: SYS "Wimp_ProcessKey",b%!24
+	WHEN 9		: PROCmenu_selection(b%)
+	WHEN 17, 18	: PROCuser_message(b%)
+	WHEN 19		: IF b%!16 = &4AF80 THEN PROCurl_bounce(b%)
+ENDCASE
+ENDPROC
+
+
+REM Process mouse clicks in windows.
+REM
+REM \param window%	The window under the mouse.
+REM \param icon%	The icon under the mouse.
+REM \param buttons%	The buttons involved in the selection.
+:
+DEF PROCmouse_click(window%, icon%, buttons%)
+CASE window% OF
+WHEN -2
+	CASE buttons% OF
+	WHEN 1, 4
+		IF NOT play% THEN
+			PROCnew_game
+			PROCwindow_open(MainWindow%)
+			PROCwindow_force_redraw(MainWindow%)
+		ELSE
+			PROCwindow_open(MainWindow%)
+		ENDIF
+	WHEN 2
+		PROCmenu_create_iconbar(IconbarMenu%, !b%)
+	ENDCASE
+
+WHEN MainWindow%
+	CASE icon% OF
+	WHEN 0, 1, 2, 3, 4, 5, 6, 7, 8
+		IF play% AND board(icon%) = 0 THEN
+			N = icon%
+			IF player% PROCdrawX ELSE PROCdrawO
+			IF player% THEN moves += 1
+			player% = NOT player%
+			PROCcomp
+			IF (NOT xwin) AND (NOT owin) THEN
+				IF moves >= 5 THEN PROCdraw
+			ENDIF
+			IF moves < 5 AND (NOT xwin) AND comp% PROCdrawO : player% = NOT player%
+			IF xwin THEN PROCxwin
+			IF owin THEN PROCowin
+		ENDIF
+	ENDCASE
+
+WHEN OptionsWindow%
+	CASE icon% OF
+	WHEN 10
+		comp%=FNicon_selected(OptionsWindow%, 10)
+	WHEN 7
+		PROCicon_set_shaded(OptionsWindow%, 6, NOT FNicon_selected(OptionsWindow%, 7))
+	WHEN 9
+		PROCicon_set_shaded(OptionsWindow%, 8, NOT FNicon_selected(OptionsWindow%, 9))
+	WHEN -1 : REM Was Reset
+		ScoreX% = 0
+		ScoreO% = 0
+		GamesPlayed%=0
+		PROCwrite_scores(0, 0, 0)
+		PROCwindow_force_redraw(MainWindow%)
+	WHEN -2 : REM Was New Game
+		PROCnew_game
+		PROCwindow_force_redraw(MainWindow%)
+	WHEN 12
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
+		PROCwindow_force_redraw(MainWindow%)
+	WHEN 13
+		PROCmenu_create(0, 0, -1)
+	ENDCASE
+
+WHEN InfoWindow%
+	IF buttons% = 4 AND icon% = 8 THEN
+		PROCurl_launch(FNmessage_lookup("SupportURL"))
+		PROCmenu_create(-1, 0, 0)
+	ENDIF
+ENDCASE
+ENDPROC
+
+
+REM Process selections from menus.
+REM
+REM \param		The menu selection block.
+:
+DEF PROCmenu_selection(block%)
+LOCAL reopen%
+
+SYS "Wimp_GetPointerInfo",,q%
+reopen% = (q%!8 = 1)
+
+CASE FNmenu_current_handle OF
+WHEN IconbarMenu%
+	CASE !block% OF
+		WHEN 1	: OSCLI("%Filer_Run <Crosses$Dir>.!Help")
+		WHEN 3	: Quit% = TRUE
+	ENDCASE
+ENDCASE
+
+IF reopen% THEN PROCmenu_create(FNmenu_current_handle, 0, 0)
+ENDPROC
+
+
+REM Process incoming user messages.
+REM
+REM \param		The user message block.
+:
+DEF PROCuser_message(block%)
+CASE block%!16 OF
+	WHEN 0		: Quit% = TRUE
+	WHEN &4E383	: PROCurl_bounce(b%)
+ENDCASE
+ENDPROC
+
+
 REM Initialise ourselves, internally and with the Wimp.
 :
 DEF PROCinitialise
@@ -143,30 +269,9 @@ ScoreO% = 0
 GamesPlayed%=0
 ENDPROC
 
-DEF PROCpoll
-LOCAL reopen%, reason%
-SYS "Wimp_Poll", &3C01, b% TO reason%
-CASE reason% OF
-WHEN 2 : SYS "Wimp_OpenWindow",,b%
-WHEN 3 : SYS "Wimp_CloseWindow",,b%
-WHEN 6 : PROCmouse_click(b%!12,b%!16,b%!8)
-WHEN 8 : SYS "Wimp_ProcessKey",b%!24
-WHEN 9
- SYS "Wimp_GetPointerInfo",,q%
- reopen%=(q%!8 = 1)
- CASE !b% OF
-  WHEN 1 : OSCLI("%Filer_Run <Crosses$Dir>.!Help")
-  WHEN 3 : Quit%=TRUE
- ENDCASE
- IF reopen% THEN PROCmenu_create(FNmenu_current_handle, 0, 0)
-WHEN 17,18
- CASE b%!16 OF
-  WHEN 0      : Quit%=TRUE
-  WHEN &4E383 : PROCurl_bounce(b%)
- ENDCASE
-WHEN 19 : IF b%!16 = &4AF80 THEN PROCurl_bounce(b%)
-ENDCASE
-ENDPROC
+
+
+
 
 
 
@@ -230,68 +335,7 @@ ENDIF
 PROCicon_set_colours(MainWindow%,9,11,1)
 ENDPROC
 :
-DEF PROCmouse_click(window%,icon%,buttons%)
-CASE window% OF
-   WHEN -2
-      CASE buttons% OF
-         WHEN 1,4
-            IF NOT play% THEN
-            PROCnew_game
-            PROCwindow_open(MainWindow%)
-            PROCwindow_force_redraw(MainWindow%)
-            ELSE
-            PROCwindow_open(MainWindow%)
-            ENDIF
-         WHEN 2
-            PROCmenu_create_iconbar(IconbarMenu%, !b%)
-         ENDCASE
-   WHEN MainWindow%
-      CASE icon% OF
-         WHEN 0,1,2,3,4,5,6,7,8
-            IF play% AND board(icon%)=0 THEN
-            N=icon%
-            IF player% PROCdrawX ELSE PROCdrawO
-            IF player% THEN moves+=1
-            player%=NOT player%
-            PROCcomp
-            IF (NOT xwin) AND (NOT owin) THEN
-            IF moves>=5 THEN PROCdraw
-            ENDIF
-            IF moves<5 AND (NOT xwin) AND comp% PROCdrawO : player%=NOT player%
-            IF xwin THEN PROCxwin
-            IF owin THEN PROCowin
-            ENDIF
-         ENDCASE
-   WHEN OptionsWindow%
-      CASE icon% OF
-         WHEN 10
-            comp%=FNicon_selected(OptionsWindow%, 10)
-         WHEN 7
-            PROCicon_set_shaded(OptionsWindow%, 6, NOT FNicon_selected(OptionsWindow%, 7))
-         WHEN 9
-            PROCicon_set_shaded(OptionsWindow%, 8, NOT FNicon_selected(OptionsWindow%, 9))
-         WHEN -1 : REM Was Reset
-            ScoreX% = 0
-            ScoreO% = 0
-            GamesPlayed%=0
-            PROCwrite_scores(0, 0, 0)
-            PROCwindow_force_redraw(MainWindow%)
-         WHEN -2 : REM Was New Game
-            PROCnew_game
-            PROCwindow_force_redraw(MainWindow%)
-         WHEN 12
-            PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-            PROCwindow_force_redraw(MainWindow%)
-         WHEN 13
-            PROCmenu_create(0,0,-1)
-         ENDCASE
-   WHEN InfoWindow%
-      IF buttons% = 4 AND icon% = 8 THEN
-         PROCurl_launch(FNmessage_lookup("SupportURL"))
-         PROCmenu_create(-1,0,0)
-      ENDIF
-   ENDCASE
-ENDPROC
+
 :
 DEF PROCcomp
 max=-1000:xwin=FALSE:owin=FALSE
