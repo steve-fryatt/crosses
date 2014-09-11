@@ -283,15 +283,18 @@ REM \param value$		The sprite name to place in the square.
 DEF PROCdraw_square(square%, value$)
 IF square% < 0 OR square% > 8 OR LEN(value$) <> 1 THEN ENDPROC
 $FNicon_indirection(MainWindow%, square%) = value$
+PROCicon_redraw(MainWindow%, square%)
 ENDPROC
 
 
 REM Write a message to the message field below the playing grid.
 REM
+REM \param colour%		The Wimp colour to use for the text.
 REM \param text$		The text of the message to write.
 :
-DEF PROCwrite_message(text$)
+DEF PROCwrite_message(colour%, text$)
 PROCicon_set_indirected_text(MainWindow%, 9, text$)
+PROCicon_set_colours(MainWindow%, 9, colour%, 1)
 ENDPROC
 
 
@@ -303,14 +306,18 @@ REM \param oscore%		The score for player O.
 REM \param games%		The number of games played.
 :
 DEF PROCwrite_scores(xscore%, oscore%, games%)
+LOCAL scores$
+
 PROCicon_set_indirected_text(MainWindow%, 10, STR$(xscore%))
 PROCicon_set_indirected_text(MainWindow%, 11, STR$(oscore%))
 
-IF FNicon_selected(OptionsWindow%, 12) THEN
-	PROCicon_set_indirected_text(MainWindow%, 12, "Scores (of " + STR$(games%) + ")")
-ELSE
-	PROCicon_set_indirected_text(MainWindow%, 12, "Scores")
-ENDIF
+scores$ = FNmessage_lookup("Scores")
+IF FNicon_selected(OptionsWindow%, 12) THEN scores$ += FNmessage_param_lookup("Of", STR$(games%), "", "", "")
+PROCicon_set_indirected_text(MainWindow%, 12, scores$)
+
+PROCicon_redraw(MainWindow%, 10)
+PROCicon_redraw(MainWindow%, 11)
+PROCicon_redraw(MainWindow%, 12)
 ENDPROC
 
 
@@ -327,12 +334,7 @@ NEXT i%
 board()=0
 play%=TRUE
 player%=-1
-IF FNicon_selected(OptionsWindow%, 7) THEN
-PROCwrite_message($FNicon_indirection(OptionsWindow%, 6)+" to move")
-ELSE
-PROCwrite_message("X to move")
-ENDIF
-PROCicon_set_colours(MainWindow%,9,11,1)
+PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 ENDPROC
 :
 
@@ -373,66 +375,54 @@ ENDPROC
 DEF PROCdrawX
 PROCdraw_square(N, "x")
 board(N)=cross
-PROCicon_set_colours(MainWindow%,9,10,1)
-IF FNicon_selected(OptionsWindow%, 9) THEN
-PROCwrite_message($FNicon_indirection(OptionsWindow%, 8)+" to move")
-ELSE
-PROCwrite_message("O to move")
-ENDIF
-PROCwindow_force_redraw(MainWindow%)
+PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
 ENDPROC
 
 DEF PROCdrawO
 PROCdraw_square(N, "0")
 board(N)=nought
-IF NOT owin THEN
-IF FNicon_selected(OptionsWindow%, 7) THEN
-PROCwrite_message($FNicon_indirection(OptionsWindow%, 6)+" to move")
-ELSE
-PROCwrite_message("X to move")
-ENDIF
-ENDIF
-PROCicon_set_colours(MainWindow%, 9, 11, 1)
-PROCwindow_force_redraw(MainWindow%)
+IF NOT owin THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 ENDPROC
 
 DEF PROCowin
 play%=FALSE
-IF FNicon_selected(OptionsWindow%, 9) THEN
-PROCwrite_message($FNicon_indirection(OptionsWindow%, 8)+" wins game")
-ELSE
-PROCwrite_message("O wins game")
-ENDIF
-PROCicon_set_colours(MainWindow%,9,10,1)
+PROCwrite_message(10, FNmessage_param_lookup("Win", FNget_o_name, "", "", ""))
 ScoreO% += 1
 IF GamesPlayed%<99 THEN GamesPlayed%+=1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-PROCwindow_force_redraw(MainWindow%)
 ENDPROC
 :
 DEF PROCxwin
 play%=FALSE
-IF FNicon_selected(OptionsWindow%, 7) THEN
-PROCwrite_message($FNicon_indirection(OptionsWindow%, 6)+" wins game")
-ELSE
-PROCwrite_message("X wins game")
-ENDIF
-PROCicon_set_colours(MainWindow%,9,11,1)
+PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
 ScoreX% += 1
 IF GamesPlayed%<99 THEN GamesPlayed%+=1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-PROCwindow_force_redraw(MainWindow%)
 ENDPROC
 :
 DEF PROCdraw
 play%=FALSE
-PROCwrite_message("Game drawn")
-PROCicon_set_colours(MainWindow%,9,7,1)
+PROCwrite_message(7, FNmessage_lookup("Draw"))
 IF FNicon_selected(OptionsWindow%, 11) THEN
  ScoreX% += 1
  ScoreO% += 1
 ENDIF
 IF GamesPlayed%<99 THEN GamesPlayed%+=1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-PROCwindow_force_redraw(MainWindow%)
 ENDPROC
+
+REM Return a name to use for X's player.
+REM
+REM \return			The name to use for X.
+:
+DEF FNget_x_name
+IF FNicon_selected(OptionsWindow%, 7) THEN =$FNicon_indirection(OptionsWindow%, 6) ELSE ="X"
+
+
+REM Return a name to use for O's player.
+REM
+REM \return			The name to use for O.
+:
+DEF FNget_o_name
+IF FNicon_selected(OptionsWindow%, 9) THEN =$FNicon_indirection(OptionsWindow%, 8) ELSE ="O"
+
