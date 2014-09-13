@@ -251,17 +251,12 @@ Board%() = 0
 
 
 
-DIM subscripts(23),constinant(12)
+DIM Subscripts%(23)
+Subscripts%() = 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7, 2,5,8, 0,4,8, 2,4,6
 
-DATA 0,1,2,3,4,5,6,7,8,0,3,6,1,4,7,2,5,8,0,4,8,2,4,6
-FOR i% = 0 TO 23
-	READ subscripts(i%)
-NEXT i%
+DIM Constant%(12)
+Constant%() = 0,7,31,128,-15,0,0,0,-63,0,0,0,0
 
-DATA 0,7,31,128,-15,0,0,0,-63,0,0,0,0
-FOR i% = 0 TO 12
-	READ constinant(i%)
-NEXT i%
 
 ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
 Playing%=FALSE
@@ -354,23 +349,22 @@ ENDPROC
 
 
 DEF PROCplay_square(square%)
-LOCAL xwin%, owin%
+LOCAL xwin%, owin%, computer%
 
 IF Playing% AND Board%(square%) = Value%(Blank%) THEN
-	N = square%
 	IF player% THEN
-		PROCdraw_square(N, Cross%)
+		PROCdraw_square(square%, Cross%)
 		PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
 	ELSE
-		PROCdraw_square(N, Nought%)
+		PROCdraw_square(square%, Nought%)
 		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 	ENDIF
 	IF player% THEN moves += 1
 	player% = NOT player%
-	PROCcomp(xwin%, owin%)
+	computer% = FNcomp(xwin%, owin%)
 	IF (NOT xwin%) AND (NOT owin%) AND moves >= 5 THEN PROCdraw
 	IF moves < 5 AND (NOT xwin%) AND ComputerPlayer% THEN
-		PROCdraw_square(N, Nought%)
+		PROCdraw_square(computer%, Nought%)
 		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 		player% = NOT player%
 	ENDIF
@@ -381,43 +375,54 @@ ENDPROC
 
 
 :
-DEF PROCcomp(RETURN xwin%, RETURN owin%)
-LOCAL count()
+DEF FNcomp(RETURN xwin%, RETURN owin%)
+LOCAL count%(), best%, maximum%, position%, i%, score%, type%
 
-DIM count(12)
+DIM count%(12)
+best% = -1
 
-max=-1000:xwin%=FALSE:owin%=FALSE
-FOR P=0 TO 8
- IF Board%(P) = Value%(Blank%) THEN
-  IF ComputerPlayer% THEN Board%(P) = Value%(Nought%)
-  FOR I=1 TO 12:count(I)=0:NEXT I
-  FOR I=0 TO 21 STEP 3
-   type=Board%(subscripts(I))+Board%(subscripts(I+1))+Board%(subscripts(I+2))
-   count(type)=count(type)+1
-  NEXT I
-  IF count(3) owin%=TRUE
-  IF count(12) xwin%=TRUE
-  IF ComputerPlayer% THEN
-   score=0
-   FOR I=1 TO 8
-   score=score+count(I)*constinant(I)
-   NEXT I
-   IF score>max max=score:N=P
-  ENDIF
-  Board%(P) = Value%(Blank%)
- ELSE
-  FOR I=1 TO 12:count(I)=0:NEXT I
-  FOR I=0 TO 21 STEP 3
-   type=Board%(subscripts(I))+Board%(subscripts(I+1))+Board%(subscripts(I+2))
-   count(type)=count(type)+1
-  NEXT I
-  IF count(3) owin%=TRUE
-  IF count(12) xwin%=TRUE
- ENDIF
-NEXT P
+maximum% = -1000
+xwin% = FALSE
+owin% = FALSE
+
+FOR position% = 0 TO 8
+	count%() = 0
+	IF Board%(position%) = Value%(Blank%) THEN
+		IF ComputerPlayer% THEN Board%(position%) = Value%(Nought%)
+
+		FOR i% = 0 TO 21 STEP 3
+			type% = Board%(Subscripts%(i%)) + Board%(Subscripts%(i% + 1)) + Board%(Subscripts%(i% + 2))
+			count%(type%) = count%(type%) + 1
+		NEXT i%
+
+		IF count%(3) > 0 THEN owin%=TRUE
+		IF count%(12) > 0 THEN xwin%=TRUE
+
+		IF ComputerPlayer% THEN
+			score% = 0
+			FOR i% = 1 TO 8
+				score% += count%(i%) * Constant%(i%)
+			NEXT i%
+
+			IF score% > maximum% THEN
+				maximum% = score%
+				best% = position%
+			ENDIF
+		ENDIF
+
+		Board%(position%) = Value%(Blank%)
+	ELSE
+		FOR i% = 0 TO 21 STEP 3
+			type% = Board%(Subscripts%(i%)) + Board%(Subscripts%(i% + 1)) + Board%(Subscripts%(i% + 2))
+			count%(type%) = count%(type%) + 1
+		NEXT i%
+
+		IF count%(3) THEN owin%=TRUE
+		IF count%(12) THEN xwin%=TRUE
+	ENDIF
+NEXT position%
 IF xwin% AND owin% AND ComputerPlayer% THEN owin%=FALSE
-ENDPROC
-:
+=best%
 
 
 DEF PROCowin
