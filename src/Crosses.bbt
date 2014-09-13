@@ -82,7 +82,7 @@ CASE window% OF
 WHEN -2
 	CASE buttons% OF
 	WHEN 1, 4
-		IF NOT play% THEN
+		IF NOT Playing% THEN
 			PROCnew_game
 			PROCwindow_open(MainWindow%)
 			PROCwindow_force_redraw(MainWindow%)
@@ -94,27 +94,12 @@ WHEN -2
 	ENDCASE
 
 WHEN MainWindow%
-	CASE icon% OF
-	WHEN 0, 1, 2, 3, 4, 5, 6, 7, 8
-		IF play% AND board(icon%) = 0 THEN
-			N = icon%
-			IF player% PROCdrawX ELSE PROCdrawO
-			IF player% THEN moves += 1
-			player% = NOT player%
-			PROCcomp
-			IF (NOT xwin) AND (NOT owin) THEN
-				IF moves >= 5 THEN PROCdraw
-			ENDIF
-			IF moves < 5 AND (NOT xwin) AND comp% PROCdrawO : player% = NOT player%
-			IF xwin THEN PROCxwin
-			IF owin THEN PROCowin
-		ENDIF
-	ENDCASE
+	IF icon% >= 0 AND icon% <= 8 THEN PROCplay_square(icon%)
 
 WHEN OptionsWindow%
 	CASE icon% OF
 	WHEN 10
-		comp%=FNicon_selected(OptionsWindow%, 10)
+		ComputerPlayer%=FNicon_selected(OptionsWindow%, 10)
 	WHEN 7
 		PROCicon_set_shaded(OptionsWindow%, 6, NOT FNicon_selected(OptionsWindow%, 7))
 	WHEN 9
@@ -243,27 +228,44 @@ b%!4 = OptionsWindow%
 PROCmenu_load_templates(resources$ + "Menus", b%)
 IconbarMenu% = b%!0
 
+REM The following values are indexes for the arrays which follow.
+
+Blank% = 0
+Nought% = 1
+Cross% = 2
+
+REM The sprites used to represent the marks on the playing board.
+
+DIM Sprite$(2)
+Sprite$() = "-", "0", "x"
+
+REM The values used to represent the marks on the playing board.
+
+DIM Value%(2)
+Value%() = 0, 1, 4
+
+REM The board representation.
+
+DIM Board%(8)
+Board%() = 0
 
 
 
+DIM subscripts(23),constinant(12)
 
-
-
-
-DIM subscripts(23),constinant(12),board(8),horisontal(8),vertical(8),count(12)
 DATA 0,1,2,3,4,5,6,7,8,0,3,6,1,4,7,2,5,8,0,4,8,2,4,6
-FOR I=0 TO 23:READ subscripts(I):NEXT I
+FOR i% = 0 TO 23
+	READ subscripts(i%)
+NEXT i%
+
 DATA 0,7,31,128,-15,0,0,0,-63,0,0,0,0
-FOR I=0 TO 12:READ constinant(I):NEXT I
-DATA 0,1,4,192
-READ blank,nought,cross,size
-FOR I=0 TO 8
-horisontal(I)=size*(1+(I MOD 3))
-vertical(I)=size*(3-(I DIV 3))
-NEXT I
+FOR i% = 0 TO 12
+	READ constinant(i%)
+NEXT i%
+
 ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
-play%=FALSE
-comp%=FALSE
+Playing%=FALSE
+ComputerPlayer% = FALSE
 ScoreX% = 0
 ScoreO% = 0
 GamesPlayed%=0
@@ -278,11 +280,14 @@ ENDPROC
 REM Draw the contents of a grid square.
 REM
 REM \param square%		The square (0 to 8) to draw.
-REM \param value$		The sprite name to place in the square.
+REM \param shape%		The shape index to place in teh square.
 :
-DEF PROCdraw_square(square%, value$)
-IF square% < 0 OR square% > 8 OR LEN(value$) <> 1 THEN ENDPROC
-$FNicon_indirection(MainWindow%, square%) = value$
+DEF PROCdraw_square(square%, shape%)
+IF square% < 0 OR square% > 8 OR shape% < 0 OR shape% > 2 THEN ENDPROC
+
+Board%(square%) = Value%(shape%)
+
+PROCicon_set_indirected_text(MainWindow%, square%, Sprite$(shape%))
 PROCicon_redraw(MainWindow%, square%)
 ENDPROC
 
@@ -322,6 +327,14 @@ ENDPROC
 
 
 
+
+
+
+
+
+
+
+
 :
 DEF PROCnew_game
 LOCAL i%
@@ -329,63 +342,86 @@ LOCAL i%
 moves=0
 
 FOR i% = 0 TO 8
-	PROCdraw_square(i%, "-")
+	PROCdraw_square(i%, Blank%)
 NEXT i%
-board()=0
-play%=TRUE
-player%=-1
+
+Playing%=TRUE
+player% = TRUE
 PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 ENDPROC
 :
 
+
+
+DEF PROCplay_square(square%)
+LOCAL xwin%, owin%
+
+IF Playing% AND Board%(square%) = Value%(Blank%) THEN
+	N = square%
+	IF player% THEN
+		PROCdraw_square(N, Cross%)
+		PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
+	ELSE
+		PROCdraw_square(N, Nought%)
+		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+	ENDIF
+	IF player% THEN moves += 1
+	player% = NOT player%
+	PROCcomp(xwin%, owin%)
+	IF (NOT xwin%) AND (NOT owin%) AND moves >= 5 THEN PROCdraw
+	IF moves < 5 AND (NOT xwin%) AND ComputerPlayer% THEN
+		PROCdraw_square(N, Nought%)
+		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+		player% = NOT player%
+	ENDIF
+	IF xwin% THEN PROCxwin
+	IF owin% THEN PROCowin
+ENDIF
+ENDPROC
+
+
 :
-DEF PROCcomp
-max=-1000:xwin=FALSE:owin=FALSE
+DEF PROCcomp(RETURN xwin%, RETURN owin%)
+LOCAL count()
+
+DIM count(12)
+
+max=-1000:xwin%=FALSE:owin%=FALSE
 FOR P=0 TO 8
- IF board(P)=blank THEN
-  IF comp% THEN board(P)=nought
+ IF Board%(P) = Value%(Blank%) THEN
+  IF ComputerPlayer% THEN Board%(P) = Value%(Nought%)
   FOR I=1 TO 12:count(I)=0:NEXT I
   FOR I=0 TO 21 STEP 3
-   type=board(subscripts(I))+board(subscripts(I+1))+board(subscripts(I+2))
+   type=Board%(subscripts(I))+Board%(subscripts(I+1))+Board%(subscripts(I+2))
    count(type)=count(type)+1
   NEXT I
-  IF count(3) owin=TRUE
-  IF count(12) xwin=TRUE
-  IF comp% THEN
+  IF count(3) owin%=TRUE
+  IF count(12) xwin%=TRUE
+  IF ComputerPlayer% THEN
    score=0
    FOR I=1 TO 8
    score=score+count(I)*constinant(I)
    NEXT I
    IF score>max max=score:N=P
   ENDIF
-  board(P)=blank
+  Board%(P) = Value%(Blank%)
  ELSE
   FOR I=1 TO 12:count(I)=0:NEXT I
   FOR I=0 TO 21 STEP 3
-   type=board(subscripts(I))+board(subscripts(I+1))+board(subscripts(I+2))
+   type=Board%(subscripts(I))+Board%(subscripts(I+1))+Board%(subscripts(I+2))
    count(type)=count(type)+1
   NEXT I
-  IF count(3) owin=TRUE
-  IF count(12) xwin=TRUE
+  IF count(3) owin%=TRUE
+  IF count(12) xwin%=TRUE
  ENDIF
 NEXT P
-IF xwin AND owin AND comp% THEN owin=FALSE
+IF xwin% AND owin% AND ComputerPlayer% THEN owin%=FALSE
 ENDPROC
 :
-DEF PROCdrawX
-PROCdraw_square(N, "x")
-board(N)=cross
-PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
-ENDPROC
 
-DEF PROCdrawO
-PROCdraw_square(N, "0")
-board(N)=nought
-IF NOT owin THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
-ENDPROC
 
 DEF PROCowin
-play%=FALSE
+Playing%=FALSE
 PROCwrite_message(10, FNmessage_param_lookup("Win", FNget_o_name, "", "", ""))
 ScoreO% += 1
 IF GamesPlayed%<99 THEN GamesPlayed%+=1
@@ -393,7 +429,7 @@ PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 ENDPROC
 :
 DEF PROCxwin
-play%=FALSE
+Playing%=FALSE
 PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
 ScoreX% += 1
 IF GamesPlayed%<99 THEN GamesPlayed%+=1
@@ -401,7 +437,7 @@ PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 ENDPROC
 :
 DEF PROCdraw
-play%=FALSE
+Playing%=FALSE
 PROCwrite_message(7, FNmessage_lookup("Draw"))
 IF FNicon_selected(OptionsWindow%, 11) THEN
  ScoreX% += 1
@@ -410,6 +446,8 @@ ENDIF
 IF GamesPlayed%<99 THEN GamesPlayed%+=1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 ENDPROC
+
+
 
 REM Return a name to use for X's player.
 REM
