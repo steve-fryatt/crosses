@@ -451,11 +451,10 @@ FOR position% = 0 TO 8
 	REM there's both a row of Xs and a row of Os, the Xs trump as the
 	REM winning O will have been put there by the computer player.
 
-	IF count%(12) > 0 THEN
-		xwin%=TRUE
-	ELSE
-		IF count%(3) > 0 THEN owin%=TRUE
-	ENDIF
+	CASE TRUE OF
+		WHEN count%(12) > 0	: xwin%=TRUE
+		WHEN count%(3) > 0	: owin%=TRUE
+	ENDCASE
 
 	REM If the computer player is active, score the grid with the trial
 	REM O in place and track the best option we can find.
