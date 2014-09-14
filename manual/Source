@@ -40,9 +40,7 @@ The necessary libraries and build tools can be found at <link ref="#url http://w
 
 <chapter title="Installing Crosses" file="Install">
 
-<cite>Crosses</cite> can be run off a hard disc or floppy disc.
-
-To install <cite>Crosses</cite> on a hard disc, copy the <file>!Crosses</file> application to a suitable place on your disc.
+<cite>Crosses</cite> requires RISC&nbsp;OS&nbsp;3.1 or later, and can be run off a hard disc or floppy disc. To install <cite>Crosses</cite> on a hard disc, copy the <file>!Crosses</file> application to a suitable place on your disc.
 
 </chapter>
 
@@ -51,14 +49,26 @@ To install <cite>Crosses</cite> on a hard disc, copy the <file>!Crosses</file> a
 
 <chapter title="Using Crosses" file="Use">
 
-<cite>Crosses</cite> plays Noughts and Crosses &ndash; fairly well. When it is on the iconbar, click <mouse>select</mouse> on the icon to open the playing window. Now click on grid squares to place Os and Xs alternately.
+<cite>Crosses</cite> plays Noughts and Crosses. To start the application, double-click on <file>!Crosses</file> in the directory viewer to place it on the iconbar. Clicking <mouse>select</mouse> on its icon will open the game window.
+
+By default, X moves first with the computer playing O. Click on a grid square to place an X; the computer will then place an O to follow it. If the computer player is turned off, clicks on the grid will alternately place Xs and Os.
+
+The game ends when either one of the players gets a row of three of their symbols, or the board is full; in the latter case, the game is considered a draw. A new game can be started by clicking <mouse>menu</mouse> over the game window and selecting <menu>New game</menu>; selecting <menu>Reset scores</menu> will reset the scoreboard.
+
+If the current game has finished, clicking <mouse>select</mouse> on Crosses&rsquo; iconbar icon will also start a new game.
 
 
 <subhead title="Changing the game options">
 
-Following the <menu>Options</menu> entry in the iconbar menu allows various things to be set up. Selecting either of the <icon>Player's name</icon> options and typing a name into the box will replace the X and O in the messages in the main window. You can make the computer play O by selecting <icon>Computer player</icon>. <icon>Score draws</icon> will give 1 point to each side in the event of a draw, <icon>Count games</icon> will keep a running total of how many you have played. <icon>Reset Scores</icon> and <icon>New Game</icon> do exactly as they say.
+A number of options can be selected by selecting <menu>Choices...</menu> from the iconbar menu to access the <window>Choices</window> dialogue.
 
-When the game is over, clicking <mouse>select</mouse> on the iconbar will clear the board as well.
+The <icon>Player&nbsp;X</icon> and <icon>Player&nbsp;O</icon> sections allow the two players to be configured. Selecting <icon>Player&rsquo;s name</icon> allows a name to be entered into the field below: this will then be used instead of &ldquo;X&rdquo; and &ldquo;O&rdquo; in the game window.
+
+Under <icon>Player&nbsp;O</icon>, the <icon>Computer player</icon> option will allow the person playing O to be switched between human and computer.
+
+The <icon>Scoring</icon> section allows some control over the way that games are scored. The <icon>Score draws</icon> option controls whether drawn games count towards the scoreboard values (being attributed to both players). The <icon>Count games</icon> option can be turned on to display the number of games in the scoreboard.
+
+Once the options have been set, clicking <icon>Set</icon> will apply them. Clicking <icon>Cancel</icon> with <mouse>select</mouse> will forget any changes and close the dialogue; with <mouse>adjust</mouse> it will reset the dialogue to the state it was in when it was last opened.
 
 </chapter>
 
@@ -91,6 +101,11 @@ Development release for testing and feedback.
 <li><menu>Help</menu> menu entry added to iconbar menu.
 <li><icon>Website</icon> button added to <window>program information</window> window.
 <li>Menus remain open when selections are made with <mouse>adjust</mouse>.
+<li><window>Choices</window> dialogue made static and updated to follow Style Guide conventions.
+<li>Updated application sprites.
+<li>Rationalised iconbar actions.
+<li>Added main window menu to start new games and reset scores.
+<li>Updated to follow RISC&nbsp;OS&nbsp;3 conventions: don&rsquo;t waste time taking unwanted user messages or null events.
 </list>
 
 </chapter>
