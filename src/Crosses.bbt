@@ -459,10 +459,8 @@ FOR position% = 0 TO 8
 	REM O in place and track the best option we can find.
 
 	IF (Board%(position%) = Value%(Blank%)) AND ComputerPlayer% THEN
-		score% = 0
-		FOR i% = 1 TO 8
-			score% += count%(i%) * Weighting%(i%)
-		NEXT i%
+		count%() = count%() * Weighting%()
+		score% = SUM(count%())
 
 		IF score% > maximum% THEN
 			maximum% = score%
