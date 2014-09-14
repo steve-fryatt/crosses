@@ -48,7 +48,7 @@ ChoicesCountGames% = FALSE
 ChoicesScoreDraws% = FALSE
 ChoicesNamePlayerX% = FALSE
 ChoicesNamePlayerO% = FALSE
-ChoicesComputerPlayer% = FALSE
+ChoicesComputerPlayer% = TRUE
 ChoicesPlayerXName$ = FNmessage_lookup("PlayerX")
 ChoicesPlayerOName$ = FNmessage_lookup("PlayerO")
 ENDPROC
