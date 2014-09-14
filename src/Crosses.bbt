@@ -86,11 +86,10 @@ IF FNchoices_process_mouse(b%) THEN ENDPROC
 CASE b%!12 OF
 WHEN -2
 	CASE b%!8 OF
-	WHEN 1, 4
+	WHEN 4
 		IF NOT Playing% THEN
 			PROCnew_game
 			PROCwindow_open(MainWindow%)
-			PROCwindow_force_redraw(MainWindow%)
 		ELSE
 			PROCwindow_open(MainWindow%)
 		ENDIF
@@ -258,9 +257,9 @@ REM Global variables used by the game code.
 Playing% = FALSE
 CurrentPlayer% = FALSE
 Moves% = 0
-ScoreX% = 0
-ScoreO% = 0
-GamesPlayed%=0
+
+PROCreset_scores
+PROCnew_game
 
 ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
 ENDPROC
