@@ -249,27 +249,29 @@ REM The board representation.
 DIM Board%(8)
 Board%() = 0
 
+REM The subscripts into Board%() which make up the possible rows of three
+REM squares that can be played.
 
+DIM Subscript%(23)
+Subscript%() = 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7, 2,5,8, 0,4,8, 2,4,6
 
-DIM Subscripts%(23)
-Subscripts%() = 0,1,2, 3,4,5, 6,7,8, 0,3,6, 1,4,7, 2,5,8, 0,4,8, 2,4,6
+REM The row type weightings used when calculating move scores.
 
-DIM Constant%(12)
-Constant%() = 0,7,31,128,-15,0,0,0,-63,0,0,0,0
+DIM Weighting%(12)
+Weighting%() = 0,7,31,128,-15,0,0,0,-63,0,0,0,0
 
+REM Global variables used by the game code.
 
-ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
-Playing%=FALSE
+Playing% = FALSE
+CurrentPlayer% = FALSE
 ComputerPlayer% = FALSE
+Moves% = 0
 ScoreX% = 0
 ScoreO% = 0
 GamesPlayed%=0
+
+ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
 ENDPROC
-
-
-
-
-
 
 
 REM Draw the contents of a grid square.
@@ -321,52 +323,46 @@ PROCicon_redraw(MainWindow%, 12)
 ENDPROC
 
 
-
-
-
-
-
-
-
-
-
+REM Reset the playing board, and start a new game.
 :
 DEF PROCnew_game
 LOCAL i%
 
-moves=0
+Moves%=0
+Playing% = TRUE
+CurrentPlayer% = TRUE
 
 FOR i% = 0 TO 8
 	PROCdraw_square(i%, Blank%)
 NEXT i%
 
-Playing%=TRUE
-player% = TRUE
 PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 ENDPROC
+
+
+REM Play a suqare on the board, assigning it to the current player.
+REM
+REM \param square%		The square to play (0 to 8).
 :
-
-
-
 DEF PROCplay_square(square%)
 LOCAL xwin%, owin%, computer%
 
 IF Playing% AND Board%(square%) = Value%(Blank%) THEN
-	IF player% THEN
+	IF CurrentPlayer% THEN
 		PROCdraw_square(square%, Cross%)
 		PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
 	ELSE
 		PROCdraw_square(square%, Nought%)
 		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 	ENDIF
-	IF player% THEN moves += 1
-	player% = NOT player%
-	computer% = FNcomp(xwin%, owin%)
-	IF (NOT xwin%) AND (NOT owin%) AND moves >= 5 THEN PROCdraw
-	IF moves < 5 AND (NOT xwin%) AND ComputerPlayer% THEN
+	IF CurrentPlayer% THEN Moves% += 1
+	CurrentPlayer% = NOT CurrentPlayer%
+	computer% = FNcalculate(xwin%, owin%)
+	IF (NOT xwin%) AND (NOT owin%) AND Moves% >= 5 THEN PROCdraw
+	IF Moves% < 5 AND (NOT xwin%) AND ComputerPlayer% THEN
 		PROCdraw_square(computer%, Nought%)
 		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
-		player% = NOT player%
+		CurrentPlayer% = NOT CurrentPlayer%
 	ENDIF
 	IF xwin% THEN PROCxwin
 	IF owin% THEN PROCowin
@@ -374,9 +370,15 @@ ENDIF
 ENDPROC
 
 
+REM Run a calculation on the playing board, looking for winning lines
+REM and identifying a move for the computer player.
+REM
+REM \param xwin%		TRUE if X has won; FALSE if not.
+REM \param owin%		TRUE if O has won; FALSE if not.
+REM \return			The best next move for O, or -1 for none.
 :
-DEF FNcomp(RETURN xwin%, RETURN owin%)
-LOCAL count%(), best%, maximum%, position%, i%, score%, type%
+DEF FNcalculate(RETURN xwin%, RETURN owin%)
+LOCAL count%(), best%, maximum%, position%, i%, score%, type%, saved%
 
 DIM count%(12)
 best% = -1
@@ -386,69 +388,78 @@ xwin% = FALSE
 owin% = FALSE
 
 FOR position% = 0 TO 8
+	saved% = Board%(position%)
+
+	REM If the computer player is active, place an O in the position
+	REM before totalling up the scores.
+
+	IF (Board%(position%) = Value%(Blank%)) AND ComputerPlayer% THEN Board%(position%) = Value%(Nought%)
+
+	REM Count each of the rows on the grid.
+
 	count%() = 0
-	IF Board%(position%) = Value%(Blank%) THEN
-		IF ComputerPlayer% THEN Board%(position%) = Value%(Nought%)
 
-		FOR i% = 0 TO 21 STEP 3
-			type% = Board%(Subscripts%(i%)) + Board%(Subscripts%(i% + 1)) + Board%(Subscripts%(i% + 2))
-			count%(type%) = count%(type%) + 1
-		NEXT i%
+	FOR i% = 0 TO 21 STEP 3
+		type% = Board%(Subscript%(i%)) + Board%(Subscript%(i% + 1)) + Board%(Subscript%(i% + 2))
+		count%(type%) = count%(type%) + 1
+	NEXT i%
 
-		IF count%(3) > 0 THEN owin%=TRUE
-		IF count%(12) > 0 THEN xwin%=TRUE
+	REM Remove any change that we've just made.
 
-		IF ComputerPlayer% THEN
-			score% = 0
-			FOR i% = 1 TO 8
-				score% += count%(i%) * Constant%(i%)
-			NEXT i%
+	Board%(position%) = saved%
 
-			IF score% > maximum% THEN
-				maximum% = score%
-				best% = position%
-			ENDIF
-		ENDIF
+	REM If there are any complete rows, flag a win. In the event that
+	REM there's both a row of Xs and a row of Os, the Xs trump as the
+	REM winning O will have been put there by the computer player.
 
-		Board%(position%) = Value%(Blank%)
+	IF count%(12) > 0 THEN
+		xwin%=TRUE
 	ELSE
-		FOR i% = 0 TO 21 STEP 3
-			type% = Board%(Subscripts%(i%)) + Board%(Subscripts%(i% + 1)) + Board%(Subscripts%(i% + 2))
-			count%(type%) = count%(type%) + 1
+		IF count%(3) > 0 THEN owin%=TRUE
+	ENDIF
+
+	REM If the computer player is active, score the grid with the trial
+	REM O in place and track the best option we can find.
+
+	IF (Board%(position%) = Value%(Blank%)) AND ComputerPlayer% THEN
+		score% = 0
+		FOR i% = 1 TO 8
+			score% += count%(i%) * Weighting%(i%)
 		NEXT i%
 
-		IF count%(3) THEN owin%=TRUE
-		IF count%(12) THEN xwin%=TRUE
+		IF score% > maximum% THEN
+			maximum% = score%
+			best% = position%
+		ENDIF
 	ENDIF
 NEXT position%
-IF xwin% AND owin% AND ComputerPlayer% THEN owin%=FALSE
 =best%
 
 
 DEF PROCowin
-Playing%=FALSE
+Playing% = FALSE
 PROCwrite_message(10, FNmessage_param_lookup("Win", FNget_o_name, "", "", ""))
 ScoreO% += 1
-IF GamesPlayed%<99 THEN GamesPlayed%+=1
+IF GamesPlayed% < 99 THEN GamesPlayed% += 1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 ENDPROC
 :
 DEF PROCxwin
-Playing%=FALSE
+Playing% = FALSE
 PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
 ScoreX% += 1
-IF GamesPlayed%<99 THEN GamesPlayed%+=1
+IF GamesPlayed% < 99 THEN GamesPlayed% += 1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 ENDPROC
 :
 DEF PROCdraw
-Playing%=FALSE
+Playing% = FALSE
 PROCwrite_message(7, FNmessage_lookup("Draw"))
 IF FNicon_selected(OptionsWindow%, 11) THEN
  ScoreX% += 1
  ScoreO% += 1
 ENDIF
-IF GamesPlayed%<99 THEN GamesPlayed%+=1
+IF GamesPlayed% < 99 THEN GamesPlayed% += 1
 PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 ENDPROC
 
