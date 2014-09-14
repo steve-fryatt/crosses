@@ -237,7 +237,7 @@ Cross% = 2
 REM The sprites used to represent the marks on the playing board.
 
 DIM Sprite$(2)
-Sprite$() = "-", "0", "x"
+Sprite$() = "-", "o", "x"
 
 REM The values used to represent the marks on the playing board.
 
