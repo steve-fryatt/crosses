@@ -340,7 +340,7 @@ PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 ENDPROC
 
 
-REM Play a suqare on the board, assigning it to the current player.
+REM Play a square on the board, assigning it to the current player.
 REM
 REM \param square%		The square to play (0 to 8).
 :
@@ -348,24 +348,61 @@ DEF PROCplay_square(square%)
 LOCAL xwin%, owin%, computer%
 
 IF Playing% AND Board%(square%) = Value%(Blank%) THEN
+	REM Play the current mouse click.
+
 	IF CurrentPlayer% THEN
 		PROCdraw_square(square%, Cross%)
 		PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
+		Moves% += 1
 	ELSE
 		PROCdraw_square(square%, Nought%)
-		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+		PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 	ENDIF
-	IF CurrentPlayer% THEN Moves% += 1
+
+	REM Change players.
+
 	CurrentPlayer% = NOT CurrentPlayer%
+
+	REM Calculate the board, and find the computer's move for O.
+
 	computer% = FNcalculate(xwin%, owin%)
-	IF (NOT xwin%) AND (NOT owin%) AND Moves% >= 5 THEN PROCdraw
+
+	REM If the computer player is active, and the game isn't over,
+	REM play the identified move.
+
 	IF Moves% < 5 AND (NOT xwin%) AND ComputerPlayer% THEN
 		PROCdraw_square(computer%, Nought%)
-		IF NOT owin% THEN PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+		PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+
 		CurrentPlayer% = NOT CurrentPlayer%
 	ENDIF
-	IF xwin% THEN PROCxwin
-	IF owin% THEN PROCowin
+
+	REM If there has been a win, process it.
+
+	IF xwin% OR owin% OR Moves% >= 5 THEN
+		Playing% = FALSE
+
+		IF GamesPlayed% < 99 THEN GamesPlayed% += 1
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
+
+		CASE TRUE OF
+		WHEN xwin%
+			PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
+			ScoreX% += 1
+
+		WHEN owin%
+			PROCwrite_message(10, FNmessage_param_lookup("Win", FNget_o_name, "", "", ""))
+			ScoreO% += 1
+
+		OTHERWISE
+			PROCwrite_message(7, FNmessage_lookup("Draw"))
+			IF FNicon_selected(OptionsWindow%, 11) THEN
+				ScoreX% += 1
+				ScoreO% += 1
+			ENDIF
+
+		ENDCASE
+	ENDIF
 ENDIF
 ENDPROC
 
@@ -436,32 +473,6 @@ NEXT position%
 =best%
 
 
-DEF PROCowin
-Playing% = FALSE
-PROCwrite_message(10, FNmessage_param_lookup("Win", FNget_o_name, "", "", ""))
-ScoreO% += 1
-IF GamesPlayed% < 99 THEN GamesPlayed% += 1
-PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-ENDPROC
-:
-DEF PROCxwin
-Playing% = FALSE
-PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
-ScoreX% += 1
-IF GamesPlayed% < 99 THEN GamesPlayed% += 1
-PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-ENDPROC
-:
-DEF PROCdraw
-Playing% = FALSE
-PROCwrite_message(7, FNmessage_lookup("Draw"))
-IF FNicon_selected(OptionsWindow%, 11) THEN
- ScoreX% += 1
- ScoreO% += 1
-ENDIF
-IF GamesPlayed% < 99 THEN GamesPlayed% += 1
-PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-ENDPROC
 
 
 
