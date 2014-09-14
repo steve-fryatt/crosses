@@ -100,6 +100,7 @@ Development release for testing and feedback.
 <li>Build system revised and license updated to EUPL.
 <li><menu>Help</menu> menu entry added to iconbar menu.
 <li><icon>Website</icon> button added to <window>program information</window> window.
+<li>Support added for Interactive Help.
 <li>Menus remain open when selections are made with <mouse>adjust</mouse>.
 <li><window>Choices</window> dialogue made static and updated to follow Style Guide conventions.
 <li>Updated application sprites.

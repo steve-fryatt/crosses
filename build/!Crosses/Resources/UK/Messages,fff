@@ -39,3 +39,36 @@ O:O
 
 PlayerX:Player X
 PlayerO:Player O
+
+# Interactive Help Messages
+
+Help.Main:\Tmain Crosses \w.|MIt plays the game of Noughts and Crosses.
+Help.Main.Grid:\Sto place an X or an O on the playing grid.
+Help.Main.Display:\Tinformation field.|MWatch the text for details of the game's progress.
+Help.Main.XScore:\Tscore for the player with X.
+Help.Main.OScore:\Tscore for the player with O.
+Help.Main.Score:\Tscoreboard.|MDepending on the configured options, it may also count the games that have been played.
+
+Help.Choices:\TChoices \w for Crosses.|MIt allows aspects of the game to be configured.
+Help.Choices.Set:\Sset the options for the current session and close the \w.|M\Aset the options and leave the \w open.
+Help.Choices.Cancel:\Sclose the \w and forget any changes made.|M\Areset any changes and leave the \w open.
+Help.Choices.XNameOpt:\Schoose whether a name can be set for the player for X.
+Help.Choices.ONameOpt:\Schoose whether a name can be set for the player for O.
+Help.Choices.XName:\Tname of the player for X.
+Help.Choices.OName:\Tname of the player for O.
+Help.Choices.OComp:\Schoose whether O will be played by a human or the computer.
+Help.Choices.Draws:\Schoose whether drawn games are counted in the scoreboard.|MIf yes, they will be attributed to both players.
+Help.Choices.Count:\Schoose whether the game count will be shown in the scoreboard.
+
+Help.Info:\Tprogram information \w for the Crosses application.
+Help.Info.Website:\Tprogram information \w for the Crosses application.|M\Svisit its website for information and updates.
+
+Help.MainMenu.00:\Sstart a new game.
+Help.MainMenu.01:\Sreset the scoreboard.
+
+Help.IconBarMenu.00:\Rto see information about Crosses and visit its website.
+Help.IconBarMenu.01:\Sread the Crosses documentation.
+Help.IconBarMenu.02:\Schange the settings for Crosses.
+Help.IconBarMenu.03:\Squit Crosses.
+
+
