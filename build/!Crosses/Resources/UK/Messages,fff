@@ -33,3 +33,9 @@ Win:%0 wins game
 Draw:Game drawn
 Scores:Scores
 Of: (of %0)
+
+X:X
+O:O
+
+PlayerX:Player X
+PlayerO:Player O

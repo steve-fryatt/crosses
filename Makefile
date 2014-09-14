@@ -107,7 +107,7 @@ READMEHDR := Header
 MENUSRC := menudef
 FINDHELPSRC := Help.bbt
 
-SRCS := Crosses.bbt
+SRCS := Crosses.bbt Choices.bbt
 
 # Build everything, but don't package it for release.
 

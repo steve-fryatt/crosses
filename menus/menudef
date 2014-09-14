@@ -28,9 +28,7 @@ menu(icon_bar_menu, "Crosses") {
 		d_box(info_window);
 	}
 	item("Help");
-	item("Choices...") {
-		d_box(options_window);
-	}
+	item("Choices...");
 	item("Quit");
 }
 

@@ -32,6 +32,8 @@ LIBRARY "BASIC:WimpError"
 LIBRARY "BASIC:WimpSprite"
 LIBRARY "BASIC:Window"
 
+LIBRARY "src/Choices.bbt"
+
 PROCwimperror_initialise("Crosses", "!crosses")
 ON ERROR result% = FNwimperror_program : END
 
@@ -62,7 +64,7 @@ SYS "Wimp_Poll", &3C01, b% TO reason%
 CASE reason% OF
 	WHEN 2		: SYS "Wimp_OpenWindow",,b%
 	WHEN 3		: SYS "Wimp_CloseWindow",,b%
-	WHEN 6		: PROCmouse_click(b%!12, b%!16, b%!8)
+	WHEN 6		: PROCmouse_click(b%)
 	WHEN 8		: SYS "Wimp_ProcessKey",b%!24
 	WHEN 9		: PROCmenu_selection(b%)
 	WHEN 17, 18	: PROCuser_message(b%)
@@ -73,14 +75,17 @@ ENDPROC
 
 REM Process mouse clicks in windows.
 REM
-REM \param window%	The window under the mouse.
-REM \param icon%	The icon under the mouse.
-REM \param buttons%	The buttons involved in the selection.
+REM \param b%		The mouse click event data block.
 :
-DEF PROCmouse_click(window%, icon%, buttons%)
-CASE window% OF
+DEF PROCmouse_click(b%)
+
+REM Pass the event details around any code modules that might be interested.
+
+IF FNchoices_process_mouse(b%) THEN ENDPROC
+
+CASE b%!12 OF
 WHEN -2
-	CASE buttons% OF
+	CASE b%!8 OF
 	WHEN 1, 4
 		IF NOT Playing% THEN
 			PROCnew_game
@@ -94,34 +99,10 @@ WHEN -2
 	ENDCASE
 
 WHEN MainWindow%
-	IF icon% >= 0 AND icon% <= 8 THEN PROCplay_square(icon%)
-
-WHEN OptionsWindow%
-	CASE icon% OF
-	WHEN 10
-		ComputerPlayer%=FNicon_selected(OptionsWindow%, 10)
-	WHEN 7
-		PROCicon_set_shaded(OptionsWindow%, 6, NOT FNicon_selected(OptionsWindow%, 7))
-	WHEN 9
-		PROCicon_set_shaded(OptionsWindow%, 8, NOT FNicon_selected(OptionsWindow%, 9))
-	WHEN -1 : REM Was Reset
-		ScoreX% = 0
-		ScoreO% = 0
-		GamesPlayed%=0
-		PROCwrite_scores(0, 0, 0)
-		PROCwindow_force_redraw(MainWindow%)
-	WHEN -2 : REM Was New Game
-		PROCnew_game
-		PROCwindow_force_redraw(MainWindow%)
-	WHEN 12
-		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-		PROCwindow_force_redraw(MainWindow%)
-	WHEN 13
-		PROCmenu_create(0, 0, -1)
-	ENDCASE
+	IF b%!16 >= 0 AND b%!16 <= 8 THEN PROCplay_square(b%!16)
 
 WHEN InfoWindow%
-	IF buttons% = 4 AND icon% = 8 THEN
+	IF b%!8 = 4 AND b%!16 = 8 THEN
 		PROCurl_launch(FNmessage_lookup("SupportURL"))
 		PROCmenu_create(-1, 0, 0)
 	ENDIF
@@ -143,6 +124,7 @@ CASE FNmenu_current_handle OF
 WHEN IconbarMenu%
 	CASE !block% OF
 		WHEN 1	: OSCLI("%Filer_Run <Crosses$Dir>.!Help")
+		WHEN 2	: PROCchoices_open_window(q%!0, q%!4)
 		WHEN 3	: Quit% = TRUE
 	ENDCASE
 ENDCASE
@@ -212,8 +194,7 @@ NEXT i%
 SYS "Wimp_CreateWindow",,b% TO MainWindow%
 PROCtemplate_load("ProgInfo", b%, indirected_data%, indirected_size%, -1)
 SYS "Wimp_CreateWindow",,b% TO InfoWindow%
-PROCtemplate_load("Options", b%, indirected_data%, indirected_size%, -1)
-SYS "Wimp_CreateWindow",,b% TO OptionsWindow%
+PROCchoices_initialise
 PROCtemplate_close
 
 $FNicon_indirection(InfoWindow%, 4) = CHR$(169) + " Stephen Fryatt, 1993-" + MID$(build_date$, 8)
@@ -224,7 +205,6 @@ REM Initialise and load the menu templates
 PROCmenu_initialise
 
 b%!0 = InfoWindow%
-b%!4 = OptionsWindow%
 PROCmenu_load_templates(resources$ + "Menus", b%)
 IconbarMenu% = b%!0
 
@@ -264,7 +244,6 @@ REM Global variables used by the game code.
 
 Playing% = FALSE
 CurrentPlayer% = FALSE
-ComputerPlayer% = FALSE
 Moves% = 0
 ScoreX% = 0
 ScoreO% = 0
@@ -314,12 +293,22 @@ PROCicon_set_indirected_text(MainWindow%, 10, STR$(xscore%))
 PROCicon_set_indirected_text(MainWindow%, 11, STR$(oscore%))
 
 scores$ = FNmessage_lookup("Scores")
-IF FNicon_selected(OptionsWindow%, 12) THEN scores$ += FNmessage_param_lookup("Of", STR$(games%), "", "", "")
+IF ChoicesCountGames% THEN scores$ += FNmessage_param_lookup("Of", STR$(games%), "", "", "")
 PROCicon_set_indirected_text(MainWindow%, 12, scores$)
 
 PROCicon_redraw(MainWindow%, 10)
 PROCicon_redraw(MainWindow%, 11)
 PROCicon_redraw(MainWindow%, 12)
+ENDPROC
+
+
+REM Reset the games count and the players' scores.
+:
+DEF PROCreset_scores
+ScoreX% = 0
+ScoreO% = 0
+GamesPlayed%=0
+PROCwrite_scores(0, 0, 0)
 ENDPROC
 
 
@@ -370,7 +359,7 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 	REM If the computer player is active, and the game isn't over,
 	REM play the identified move.
 
-	IF Moves% < 5 AND (NOT xwin%) AND ComputerPlayer% THEN
+	IF Moves% < 5 AND (NOT xwin%) AND ChoicesComputerPlayer% THEN
 		PROCdraw_square(computer%, Nought%)
 		PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 
@@ -396,7 +385,7 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 
 		OTHERWISE
 			PROCwrite_message(7, FNmessage_lookup("Draw"))
-			IF FNicon_selected(OptionsWindow%, 11) THEN
+			IF ChoicesScoreDraws% THEN
 				ScoreX% += 1
 				ScoreO% += 1
 			ENDIF
@@ -430,7 +419,7 @@ FOR position% = 0 TO 8
 	REM If the computer player is active, place an O in the position
 	REM before totalling up the scores.
 
-	IF (Board%(position%) = Value%(Blank%)) AND ComputerPlayer% THEN Board%(position%) = Value%(Nought%)
+	IF (Board%(position%) = Value%(Blank%)) AND ChoicesComputerPlayer% THEN Board%(position%) = Value%(Nought%)
 
 	REM Count each of the rows on the grid.
 
@@ -458,7 +447,7 @@ FOR position% = 0 TO 8
 	REM If the computer player is active, score the grid with the trial
 	REM O in place and track the best option we can find.
 
-	IF (Board%(position%) = Value%(Blank%)) AND ComputerPlayer% THEN
+	IF (Board%(position%) = Value%(Blank%)) AND ChoicesComputerPlayer% THEN
 		count%() = count%() * Weighting%()
 		score% = SUM(count%())
 
@@ -479,7 +468,7 @@ REM
 REM \return			The name to use for X.
 :
 DEF FNget_x_name
-IF FNicon_selected(OptionsWindow%, 7) THEN =$FNicon_indirection(OptionsWindow%, 6) ELSE ="X"
+IF ChoicesNamePlayerX% THEN =ChoicesPlayerXName$ ELSE =FNmessage_lookup("X")
 
 
 REM Return a name to use for O's player.
@@ -487,5 +476,5 @@ REM
 REM \return			The name to use for O.
 :
 DEF FNget_o_name
-IF FNicon_selected(OptionsWindow%, 9) THEN =$FNicon_indirection(OptionsWindow%, 8) ELSE ="O"
+IF ChoicesNamePlayerO% THEN =ChoicesPlayerOName$ ELSE =FNmessage_lookup("O")
 
