@@ -99,7 +99,13 @@ WHEN -2
 	ENDCASE
 
 WHEN MainWindow%
-	IF b%!16 >= 0 AND b%!16 <= 8 THEN PROCplay_square(b%!16)
+	CASE b%!8 OF
+	WHEN 4
+		IF b%!16 >= 0 AND b%!16 <= 8 THEN PROCplay_square(b%!16)
+
+	WHEN 2
+		PROCmenu_create(MainMenu%, !b%, b%!4)
+	ENDCASE
 
 WHEN InfoWindow%
 	IF b%!8 = 4 AND b%!16 = 8 THEN
@@ -121,6 +127,12 @@ SYS "Wimp_GetPointerInfo",,q%
 reopen% = (q%!8 = 1)
 
 CASE FNmenu_current_handle OF
+WHEN MainMenu%
+	CASE !block% OF
+		WHEN 0	: PROCnew_game
+		WHEN 1	: PROCreset_scores
+	ENDCASE
+
 WHEN IconbarMenu%
 	CASE !block% OF
 		WHEN 1	: OSCLI("%Filer_Run <Crosses$Dir>.!Help")
@@ -207,6 +219,7 @@ PROCmenu_initialise
 b%!0 = InfoWindow%
 PROCmenu_load_templates(resources$ + "Menus", b%)
 IconbarMenu% = b%!0
+MainMenu% = b%!4
 
 REM The following values are indexes for the arrays which follow.
 
