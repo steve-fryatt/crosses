@@ -442,9 +442,6 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 	IF xwin% OR owin% OR Moves% >= 5 THEN
 		Playing% = FALSE
 
-		IF GamesPlayed% < 99 THEN GamesPlayed% += 1
-		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
-
 		CASE TRUE OF
 		WHEN xwin%
 			PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
@@ -462,6 +459,9 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 			ENDIF
 
 		ENDCASE
+
+		IF GamesPlayed% < 99 THEN GamesPlayed% += 1
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 	ENDIF
 ENDIF
 ENDPROC
