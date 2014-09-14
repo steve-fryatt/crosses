@@ -42,6 +42,8 @@ PlayerO:Player O
 
 # Interactive Help Messages
 
+Help.IconBar:\TCrosses application.|MIt plays Noughts and Crosses.|M\Sstart a new game.
+
 Help.Main:\Tmain Crosses \w.|MIt plays the game of Noughts and Crosses.
 Help.Main.Grid:\Sto place an X or an O on the playing grid.
 Help.Main.Display:\Tinformation field.|MWatch the text for details of the game's progress.

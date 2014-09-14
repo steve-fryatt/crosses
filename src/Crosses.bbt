@@ -168,6 +168,7 @@ REM Compare the window handle to the windows we know about, and find the
 REM relevant token name.
 
 CASE message%!32 OF
+	WHEN -2			: root$ = "IconBar"
 	WHEN MainWindow%	: root$ = "Main"
 	WHEN InfoWindow%	: root$ = "Info"
 	WHEN ChoicesWindow%	: root$ = "Choices"
