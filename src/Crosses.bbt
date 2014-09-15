@@ -100,7 +100,7 @@ WHEN -2
 WHEN MainWindow%
 	CASE b%!8 OF
 	WHEN 4
-		IF b%!16 >= 0 AND b%!16 <= 8 THEN PROCplay_square(b%!16)
+		IF b%!16 >= 0 AND b%!16 <= MaxSquares% THEN PROCplay_square(b%!16)
 
 	WHEN 2
 		PROCmenu_create(MainMenu%, !b%, b%!4)
@@ -201,7 +201,7 @@ IF root$ <> "" THEN
 	IF suffix$ <> "" THEN
 		root$ += "." + suffix$
 	ELSE
-		IF message%!32 = MainWindow% AND message%!36 >= 0 AND message%!36 <= 8 THEN root$ += ".Grid"
+		IF message%!32 = MainWindow% AND message%!36 >= 0 AND message%!36 <= 26 THEN root$ += ".Grid"
 	ENDIF
 	found% = FNmessage_lookup_result("Help." + root$, message$)
 ELSE
@@ -272,7 +272,7 @@ DIM indirected_data% indirected_size%
 PROCtemplate_open(resources$ + "Templates")
 PROCtemplate_load("Board", b%, indirected_data%, indirected_size%, -1)
 b%!64 = SpriteArea%
-FOR i% = 0 TO 8
+FOR i% = 0 TO 26
 	b%!(88 + 32*i% + 24) = SpriteArea%
 NEXT i%
 SYS "Wimp_CreateWindow",,b% TO MainWindow%
@@ -311,15 +311,15 @@ Value%() = 0, 1, 4
 
 REM The board representation.
 
-DIM Board%(8)
+DIM Board%(26)
 Board%() = 0
 
 REM The subscripts into Board%() which make up the possible rows of three
 REM squares that can be played.
 
-DIM Subscript%(7, 2)
+DIM Subscript%(48, 2)
 
-FOR i% = 0 TO 7
+FOR i% = 0 TO 48
 	FOR j% = 0 TO 2
 		READ Subscript%(i%, j%)
 	NEXT j%
@@ -327,9 +327,42 @@ NEXT i%
 
 REM The main grid: rows, columns and diagonals.
 
-DATA 0,1,2, 3,4,5, 6,7,8
-DATA 0,3,6, 1,4,7, 2,5,8
-DATA 0,4,8, 2,4,6
+DATA 0,1,2,    3,4,5,    6,7,8
+DATA 0,3,6,    1,4,7,    2,5,8
+DATA 0,4,8,    2,4,6
+
+REM The top grid: rows, columns and diagonals.
+
+DATA 9,10,11,  12,13,14, 15,16,17
+DATA 9,12,15,  10,13,16, 11,14,17
+DATA 9,13,17,  11,13,15
+
+REM The bottom grid: rows, columns and diagonals.
+
+DATA 18,19,20, 21,22,23, 24,25,26
+DATA 18,21,24, 19,22,25, 20,23,26
+DATA 18,22,26, 20,22,24
+
+REM Columns down through the grids.
+
+DATA 9,0,18,   10,1,19,  11,2,20
+DATA 12,3,21,  13,4,22,  14,5,23
+DATA 15,6,24,  16,7,25,  17,8,26
+
+REM Diagonals front to back down through the grids.
+
+DATA 9,3,24,   10,4,25,  11,5,26
+DATA 15,3,18,  16,4,19,  17,5,20
+
+REM Diagonals from left to right down through the grid.
+
+DATA 9,1,20,   12,4,23,  15,7,26
+DATA 11,1,18,  14,4,21,  17,7,24
+
+REM Diagonal diagonals down through the grid.
+
+DATA 9,4,26,   17,4,18
+DATA 11,4,24,  15,4,20
 
 REM The row type weightings used when calculating move scores.
 
@@ -355,7 +388,7 @@ REM \param square%		The square (0 to 8) to draw.
 REM \param shape%		The shape index to place in teh square.
 :
 DEF PROCdraw_square(square%, shape%)
-IF square% < 0 OR square% > 8 OR shape% < 0 OR shape% > 2 THEN ENDPROC
+IF square% < 0 OR square% > MaxSquares% OR shape% < 0 OR shape% > 2 THEN ENDPROC
 
 Board%(square%) = Value%(shape%)
 
@@ -372,7 +405,7 @@ REM				FALSE to leave alone.
 DEF PROChighlight_squares(highlight%())
 LOCAL i%
 
-FOR i% = 0 TO 8
+FOR i% = 0 TO MaxSquares%
 	IF highlight%(i%) THEN
 		CASE Board%(i%) OF
 		WHEN Value%(Nought%)
@@ -395,8 +428,8 @@ REM \param colour%		The Wimp colour to use for the text.
 REM \param text$		The text of the message to write.
 :
 DEF PROCwrite_message(colour%, text$)
-PROCicon_set_indirected_text(MainWindow%, 9, text$)
-PROCicon_set_colours(MainWindow%, 9, colour%, 1)
+PROCicon_set_indirected_text(MainWindow%, 27, text$)
+PROCicon_set_colours(MainWindow%, 27, colour%, 1)
 ENDPROC
 
 
@@ -410,16 +443,16 @@ REM \param games%		The number of games played.
 DEF PROCwrite_scores(xscore%, oscore%, games%)
 LOCAL scores$
 
-PROCicon_set_indirected_text(MainWindow%, 10, STR$(xscore%))
-PROCicon_set_indirected_text(MainWindow%, 11, STR$(oscore%))
+PROCicon_set_indirected_text(MainWindow%, 29, STR$(xscore%))
+PROCicon_set_indirected_text(MainWindow%, 30, STR$(oscore%))
 
 scores$ = FNmessage_lookup("Scores")
 IF ChoicesCountGames% THEN scores$ += FNmessage_param_lookup("Of", STR$(games%), "", "", "")
-PROCicon_set_indirected_text(MainWindow%, 12, scores$)
+PROCicon_set_indirected_text(MainWindow%, 28, scores$)
 
-PROCicon_redraw(MainWindow%, 10)
-PROCicon_redraw(MainWindow%, 11)
-PROCicon_redraw(MainWindow%, 12)
+PROCicon_redraw(MainWindow%, 28)
+PROCicon_redraw(MainWindow%, 29)
+PROCicon_redraw(MainWindow%, 30)
 ENDPROC
 
 
@@ -441,8 +474,17 @@ LOCAL i%
 Moves%=0
 Playing% = TRUE
 CurrentPlayer% = TRUE
+IF Choices3D% THEN
+	MaxSquares% = 26
+	MaxRows% = 48
+	MaxMoves% = 14
+ELSE
+	MaxSquares% = 8
+	MaxRows% = 7
+	MaxMoves% = 5
+ENDIF
 
-FOR i% = 0 TO 8
+FOR i% = 0 TO MaxSquares%
 	PROCdraw_square(i%, Blank%)
 NEXT i%
 
@@ -456,7 +498,7 @@ REM \param square%		The square to play (0 to 8).
 :
 DEF PROCplay_square(square%)
 LOCAL highlight%(), xwin%, owin%, computer%
-DIM highlight%(8)
+DIM highlight%(MaxSquares%)
 
 IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 	REM Play the current mouse click.
@@ -481,7 +523,7 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 	REM If the computer player is active, and the game isn't over,
 	REM play the identified move.
 
-	IF Moves% < 5 AND (NOT xwin%) AND ChoicesComputerPlayer% THEN
+	IF Moves% < MaxMoves% AND (NOT xwin%) AND ChoicesComputerPlayer% THEN
 		PROCdraw_square(computer%, Nought%)
 		PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
 
@@ -490,7 +532,7 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 
 	REM If there has been a win, process it.
 
-	IF xwin% OR owin% OR Moves% >= 5 THEN
+	IF xwin% OR owin% OR Moves% >= MaxMoves% THEN
 		Playing% = FALSE
 
 		CASE TRUE OF
@@ -539,7 +581,7 @@ xwin% = FALSE
 owin% = FALSE
 highlight%() = FALSE
 
-FOR position% = 0 TO 8
+FOR position% = 0 TO MaxSquares%
 	saved% = Board%(position%)
 
 	REM If the computer player is active, place an O in the position
@@ -551,7 +593,7 @@ FOR position% = 0 TO 8
 
 	count%() = 0
 
-	FOR i% = 0 TO 7
+	FOR i% = 0 TO MaxRows%
 		type% = Board%(Subscript%(i%, 0)) + Board%(Subscript%(i%, 1)) + Board%(Subscript%(i%, 2))
 		count%(type%) = count%(type%) + 1
 

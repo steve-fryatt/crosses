@@ -44,6 +44,7 @@ SYS "Wimp_CreateWindow",,b% TO ChoicesWindow%
 
 REM Set up the "exported" global variables.
 
+Choices3D% = TRUE
 ChoicesCountGames% = FALSE
 ChoicesScoreDraws% = FALSE
 ChoicesNamePlayerX% = FALSE
