@@ -53,9 +53,9 @@ The necessary libraries and build tools can be found at <link ref="#url http://w
 
 By default, X moves first with the computer playing O. Click on a grid square to place an X; the computer will then place an O to follow it. If the computer player is turned off, clicks on the grid will alternately place Xs and Os.
 
-The game ends when either one of the players gets a row of three of their symbols, or the board is full; in the latter case, the game is considered a draw. A new game can be started by clicking <mouse>menu</mouse> over the game window and selecting <menu>New game</menu>; selecting <menu>Reset scores</menu> will reset the scoreboard.
+The game ends when either one of the players gets a row of three of their symbols, or the board is full; in the latter case, the game is considered a draw. The winning row (or rows) will be highlighted in the grid.
 
-If the current game has finished, clicking <mouse>select</mouse> on Crosses&rsquo; iconbar icon will also start a new game.
+A new game can be started by clicking <mouse>menu</mouse> over the game window and selecting <menu>New game</menu>; selecting <menu>Reset scores</menu> will reset the scoreboard. If the current game has finished, clicking <mouse>select</mouse> on Crosses&rsquo; iconbar icon will also start a new game.
 
 
 <subhead title="Changing the game options">

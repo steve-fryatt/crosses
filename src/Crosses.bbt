@@ -353,6 +353,31 @@ PROCicon_redraw(MainWindow%, square%)
 ENDPROC
 
 
+REM Highlight grid squares as indicated by a supplied list of selections.
+REM
+REM \param highlight%()		A list of board squares: TRUE to highlight, or
+REM				FALSE to leave alone.
+
+DEF PROChighlight_squares(highlight%())
+LOCAL i%
+
+FOR i% = 0 TO 8
+	IF highlight%(i%) THEN
+		CASE Board%(i%) OF
+		WHEN Value%(Nought%)
+			PROCicon_set_indirected_text(MainWindow%, i%, Sprite$(Nought%) + "h")
+			PROCicon_redraw(MainWindow%, i%)
+
+		WHEN Value%(Cross%)
+			PROCicon_set_indirected_text(MainWindow%, i%, Sprite$(Cross%) + "h")
+			PROCicon_redraw(MainWindow%, i%)
+
+		ENDCASE
+	ENDIF
+NEXT i%
+ENDPROC
+
+
 REM Write a message to the message field below the playing grid.
 REM
 REM \param colour%		The Wimp colour to use for the text.
@@ -419,7 +444,8 @@ REM
 REM \param square%		The square to play (0 to 8).
 :
 DEF PROCplay_square(square%)
-LOCAL xwin%, owin%, computer%
+LOCAL highlight%(), xwin%, owin%, computer%
+DIM highlight%(8)
 
 IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 	REM Play the current mouse click.
@@ -439,7 +465,7 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 
 	REM Calculate the board, and find the computer's move for O.
 
-	computer% = FNcalculate(xwin%, owin%)
+	computer% = FNcalculate(xwin%, owin%, highlight%())
 
 	REM If the computer player is active, and the game isn't over,
 	REM play the identified move.
@@ -474,6 +500,8 @@ IF Playing% AND Board%(square%) = Value%(Blank%) THEN
 
 		ENDCASE
 
+		PROChighlight_squares(highlight%())
+
 		IF GamesPlayed% < 99 THEN GamesPlayed% += 1
 		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
 	ENDIF
@@ -486,9 +514,10 @@ REM and identifying a move for the computer player.
 REM
 REM \param xwin%		TRUE if X has won; FALSE if not.
 REM \param owin%		TRUE if O has won; FALSE if not.
+REM \param highlight%()		Return a list of winning squares.
 REM \return			The best next move for O, or -1 for none.
 :
-DEF FNcalculate(RETURN xwin%, RETURN owin%)
+DEF FNcalculate(RETURN xwin%, RETURN owin%, RETURN highlight%())
 LOCAL count%(), best%, maximum%, position%, i%, score%, type%, saved%
 
 DIM count%(12)
@@ -497,6 +526,7 @@ best% = -1
 maximum% = -1000
 xwin% = FALSE
 owin% = FALSE
+highlight%() = FALSE
 
 FOR position% = 0 TO 8
 	saved% = Board%(position%)
@@ -513,20 +543,41 @@ FOR position% = 0 TO 8
 	FOR i% = 0 TO 21 STEP 3
 		type% = Board%(Subscript%(i%)) + Board%(Subscript%(i% + 1)) + Board%(Subscript%(i% + 2))
 		count%(type%) = count%(type%) + 1
+
+		REM If it's a row of Os, and a row of Xs hasn't yet been found,
+		REM flag an O win and set the squares in the row to be highlighted.
+
+		IF type% = 3 AND xwin% = FALSE THEN
+			owin% = TRUE
+			highlight%(Subscript%(i%)) = TRUE
+			highlight%(Subscript%(i% + 1)) = TRUE
+			highlight%(Subscript%(i% + 2)) = TRUE
+		ENDIF
+
+		REM If it's a row of Xs, flag an X win and set the squares in the
+		REM row to be highlighted.
+		REM
+		REM If an O win has already been found, clear it and any highlight,
+		REM as if there's both a row of Xs and a row of Os, the Xs must
+		REM have been put there by the player while the Os will be a look-
+		REM ahead by the computer player and therefore don't yet exist.
+
+		IF type% = 12 THEN
+			IF owin% THEN
+				highlight%() = FALSE
+				owin% = FALSE
+			ENDIF
+
+			xwin% = TRUE
+			highlight%(Subscript%(i%)) = TRUE
+			highlight%(Subscript%(i% + 1)) = TRUE
+			highlight%(Subscript%(i% + 2)) = TRUE
+		ENDIF
 	NEXT i%
 
 	REM Remove any change that we've just made.
 
 	Board%(position%) = saved%
-
-	REM If there are any complete rows, flag a win. In the event that
-	REM there's both a row of Xs and a row of Os, the Xs trump as the
-	REM winning O will have been put there by the computer player.
-
-	CASE TRUE OF
-		WHEN count%(12) > 0	: xwin%=TRUE
-		WHEN count%(3) > 0	: owin%=TRUE
-	ENDCASE
 
 	REM If the computer player is active, score the grid with the trial
 	REM O in place and track the best option we can find.
