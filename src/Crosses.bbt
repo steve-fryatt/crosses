@@ -65,7 +65,7 @@ CASE reason% OF
 	WHEN 2		: SYS "Wimp_OpenWindow",,b%
 	WHEN 3		: SYS "Wimp_CloseWindow",,b%
 	WHEN 6		: PROCmouse_click(b%)
-	WHEN 8		: SYS "Wimp_ProcessKey",b%!24
+	WHEN 8		: PROCkey_press(b%)
 	WHEN 9		: PROCmenu_selection(b%)
 	WHEN 17, 18	: PROCuser_message(b%)
 	WHEN 19		: IF b%!16 = &4AF80 THEN PROCurl_bounce(b%)
@@ -112,6 +112,20 @@ WHEN InfoWindow%
 		PROCmenu_create(-1, 0, 0)
 	ENDIF
 ENDCASE
+ENDPROC
+
+
+REM Process keypresses in windows.
+REM
+REM \param		The keypress event data block.
+:
+DEF PROCkey_press(block%)
+
+REM Pass the event details around any code modules that might be interested.
+
+IF FNchoices_process_keypress(b%) THEN ENDPROC
+
+SYS "Wimp_ProcessKey",block%!24
 ENDPROC
 
 

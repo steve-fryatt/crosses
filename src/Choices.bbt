@@ -121,6 +121,38 @@ ENDCASE
 =processed%
 
 
+REM Process keypresses in choices windows.
+REM
+REM \param b%			Keypress Event data block.
+REM \return			TRUE if we handled the event; else FALSE.
+:
+DEF FNchoices_process_keypress(b%)
+LOCAL processed%
+
+processed% = TRUE
+
+CASE b%!0 OF
+WHEN ChoicesWindow%
+	CASE b%!24 OF
+	WHEN 13
+		PROCchoices_read_window
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
+		PROCwindow_close(ChoicesWindow%)
+
+	WHEN 27
+		PROCwindow_close(ChoicesWindow%)
+
+	OTHERWISE
+		processed% = FALSE
+	ENDCASE
+
+OTHERWISE
+	processed% = FALSE
+ENDCASE
+
+=processed%
+
+
 REM Open the Choices dialogue on screen.
 REM
 REM \param x%			The X coordinate to open the dialogue at.
