@@ -26,5 +26,5 @@ Set Crosses$Dir <Obey$Dir>
 |
 IconSprites <Crosses$Dir>.!Sprites
 |
-WimpSlot -min 64K -max 64K
+WimpSlot -min 96K -max 96K
 Run <Crosses$Dir>.!RunImage
