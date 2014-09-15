@@ -530,9 +530,6 @@ NEXT position%
 =best%
 
 
-
-
-
 REM Return a name to use for X's player.
 REM
 REM \return			The name to use for X.
