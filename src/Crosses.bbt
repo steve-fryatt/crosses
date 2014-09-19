@@ -89,7 +89,7 @@ WHEN -2
 	WHEN 4
 		IF NOT Playing% THEN
 			PROCnew_game
-			PROCwindow_open(MainWindow%)
+			PROCopen_main_window
 		ELSE
 			PROCwindow_open(MainWindow%)
 		ENDIF
@@ -142,8 +142,11 @@ reopen% = (q%!8 = 1)
 CASE FNmenu_current_handle OF
 WHEN MainMenu%
 	CASE !block% OF
-		WHEN 0	: PROCnew_game
-		WHEN 1	: PROCreset_scores
+	WHEN 0
+		PROCnew_game
+		PROCopen_main_window
+	WHEN 1
+		PROCreset_scores
 	ENDCASE
 
 WHEN IconbarMenu%
@@ -228,6 +231,59 @@ SYS "Wimp_SendMessage", 17, message%, message%!4
 ENDPROC
 
 
+REM Open (or re-open) the main window at the top of the stack, taking into
+REM account the 2D or 3D settings.
+:
+DEF PROCopen_main_window
+LOCAL m%, n%, width%
+
+REM Get the current screen width
+
+SYS "OS_ReadModeVariable", -1, 11 TO ,,m%
+SYS "OS_ReadModeVariable", -1, 4  TO ,,n%
+
+width% = m% << n%
+
+REM Get the current window state.
+
+!q% = MainWindow%
+SYS "Wimp_GetWindowState",,q%
+
+REM Adjust the window position if the width doesn't match the current
+REM 2D/3D settings.
+
+IF Choices3D% THEN
+	IF (q%!12 - q%!4) <> Window3DWidth% THEN
+		q%!4 = q%!4 - Window2DOffset%
+		q%!12 = q%!4 + Window3DWidth%
+		q%!20 = 0
+
+		REM Force the window back on screen if necessary.
+
+		CASE TRUE OF
+		WHEN q%!4 < 0
+			q%!4 = 0
+			q%!12 = Window3DWidth%
+		WHEN q%!12 >= width%
+			q%!12 = width%
+			q%!4 = q%!12 - Window3DWidth%
+		ENDCASE
+	ENDIF
+ELSE
+	IF (q%!12 - q%!4) <> Window2DWidth% THEN
+		q%!4 = q%!4 + Window2DOffset%
+		q%!12 = q%!4 + Window2DWidth%
+		q%!20 = Window2DOffset%
+	ENDIF
+ENDIF
+
+REM Open the window.
+
+q%!28=-1
+SYS "Wimp_OpenWindow",,q%
+ENDPROC
+
+
 REM Initialise ourselves, internally and with the Wimp.
 :
 DEF PROCinitialise
@@ -276,6 +332,9 @@ FOR i% = 0 TO 26
 	b%!(88 + 32*i% + 24) = SpriteArea%
 NEXT i%
 SYS "Wimp_CreateWindow",,b% TO MainWindow%
+Window2DWidth% = b%!8 - b%!0
+Window3DWidth% = b%!48 - b%!40
+Window2DOffset% = b%!16
 PROCtemplate_load("ProgInfo", b%, indirected_data%, indirected_size%, -1)
 SYS "Wimp_CreateWindow",,b% TO InfoWindow%
 PROCchoices_initialise
@@ -376,7 +435,6 @@ CurrentPlayer% = FALSE
 Moves% = 0
 
 PROCreset_scores
-PROCnew_game
 
 ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
 ENDPROC

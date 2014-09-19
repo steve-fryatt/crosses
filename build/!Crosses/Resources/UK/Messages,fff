@@ -61,6 +61,7 @@ Help.Choices.OName:\Tname of the player for O.
 Help.Choices.OComp:\Schoose whether O will be played by a human or the computer.
 Help.Choices.Draws:\Schoose whether drawn games are counted in the scoreboard.|MIf yes, they will be attributed to both players.
 Help.Choices.Count:\Schoose whether the game count will be shown in the scoreboard.
+Help.Choices.3D:\Sselect a 2D or 3D game.|M2D is a standard 3 by 3 grid.|M3D is three 3 by 3 grids stacked on top of each other.
 
 Help.Info:\Tprogram information \w for the Crosses application.
 Help.Info.Website:\Tprogram information \w for the Crosses application.|M\Svisit its website for information and updates.

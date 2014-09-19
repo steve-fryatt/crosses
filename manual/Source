@@ -51,12 +51,17 @@ The necessary libraries and build tools can be found at <link ref="#url http://w
 
 <cite>Crosses</cite> plays Noughts and Crosses. To start the application, double-click on <file>!Crosses</file> in the directory viewer to place it on the iconbar. Clicking <mouse>select</mouse> on its icon will open the game window.
 
-By default, X moves first with the computer playing O. Click on a grid square to place an X; the computer will then place an O to follow it. If the computer player is turned off, clicks on the grid will alternately place Xs and Os.
+By default, <cite>Crosses</cite> presents a standard two-dimensional board with X moving first and the computer playing O. Click on a grid square to place an X; the computer will then place an O to follow it. If the computer player is turned off, clicks on the grid will alternately place Xs and Os.
 
 The game ends when either one of the players gets a row of three of their symbols, or the board is full; in the latter case, the game is considered a draw. The winning row (or rows) will be highlighted in the grid.
 
 A new game can be started by clicking <mouse>menu</mouse> over the game window and selecting <menu>New game</menu>; selecting <menu>Reset scores</menu> will reset the scoreboard. If the current game has finished, clicking <mouse>select</mouse> on Crosses&rsquo; iconbar icon will also start a new game.
 
+<subhead title="3D Games">
+
+In addition to the standard two-dimensional, three by three playing playing grid, <cite>Crosses</cite> can play a three-dimensional game. If the <icon>3D&nbsp;game</icon> option is selected in the <window>Choices</window> dialogue, then three grids are shown side-by-side. These are treated as being stacked on top of each other to form a cube: if an X were placed in the top-left square of each grid they would form a vertical row down through the cube.
+
+Playing in 3D is the same as playing in the more familiar 2D, except that there are now 49 possible winning rows instead of eight.
 
 <subhead title="Changing the game options">
 
@@ -68,7 +73,9 @@ Under <icon>Player&nbsp;O</icon>, the <icon>Computer player</icon> option will a
 
 The <icon>Scoring</icon> section allows some control over the way that games are scored. The <icon>Score draws</icon> option controls whether drawn games count towards the scoreboard values (being attributed to both players). The <icon>Count games</icon> option can be turned on to display the number of games in the scoreboard.
 
-Once the options have been set, clicking <icon>Set</icon> will apply them. Clicking <icon>Cancel</icon> with <mouse>select</mouse> will forget any changes and close the dialogue; with <mouse>adjust</mouse> it will reset the dialogue to the state it was in when it was last opened.
+<icon>3D&nbsp;game</icon> selects a three-dimensional game, instead of the more conventional two-dimensional one.
+
+Once the options have been set, clicking <icon>Set</icon> will apply them. Clicking <icon>Cancel</icon> with <mouse>select</mouse> will forget any changes and close the dialogue; with <mouse>adjust</mouse> it will reset the dialogue to the state it was in when it was last opened. Any changes which directly affect the game will come into effect when the next new game is started.
 
 </chapter>
 
@@ -107,6 +114,7 @@ Development release for testing and feedback.
 <li>Rationalised iconbar actions.
 <li>Added main window menu to start new games and reset scores.
 <li>Updated to follow RISC&nbsp;OS&nbsp;3 conventions: don&rsquo;t waste time taking unwanted user messages or null events, and move private sprites out of the Wimp pool. (Ticket #526)
+<li>Add 3D game from <cite>XOX3D</cite>.
 </list>
 
 </chapter>

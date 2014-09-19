@@ -44,7 +44,7 @@ SYS "Wimp_CreateWindow",,b% TO ChoicesWindow%
 
 REM Set up the "exported" global variables.
 
-Choices3D% = TRUE
+Choices3D% = FALSE
 ChoicesCountGames% = FALSE
 ChoicesScoreDraws% = FALSE
 ChoicesNamePlayerX% = FALSE
@@ -193,6 +193,7 @@ PROCicon_set_selected(ChoicesWindow%, 9, ChoicesNamePlayerO%)
 PROCicon_set_selected(ChoicesWindow%, 10, ChoicesComputerPlayer%)
 PROCicon_set_selected(ChoicesWindow%, 11, ChoicesScoreDraws%)
 PROCicon_set_selected(ChoicesWindow%, 12, ChoicesCountGames%)
+PROCicon_set_selected(ChoicesWindow%, 15, Choices3D%)
 ENDPROC
 
 
@@ -206,4 +207,5 @@ ChoicesNamePlayerO% = FNicon_selected(ChoicesWindow%, 9)
 ChoicesComputerPlayer% = FNicon_selected(ChoicesWindow%, 10)
 ChoicesScoreDraws% = FNicon_selected(ChoicesWindow%, 11)
 ChoicesCountGames% = FNicon_selected(ChoicesWindow%, 12)
+Choices3D% = FNicon_selected(ChoicesWindow%, 15)
 ENDPROC
