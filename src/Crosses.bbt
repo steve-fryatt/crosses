@@ -426,7 +426,7 @@ DATA 11,4,24,  15,4,20
 REM The row type weightings used when calculating move scores.
 
 DIM Weighting%(12)
-Weighting%() = 0,7,31,128,-15,0,0,0,-63,0,0,0,0
+Weighting%() = 0,7,13,128,-15,0,0,0,-63,0,0,0,0
 
 REM Global variables used by the game code.
 
@@ -658,12 +658,21 @@ FOR position% = 0 TO MaxSquares%
 
 		REM If it's a row of Os, and a row of Xs hasn't yet been found,
 		REM flag an O win and set the squares in the row to be highlighted.
+		REM If the computer player is active, do this in a 'safe' array
+		REM until we know that this move is the one we're going for.
 
 		IF type% = 3 AND xwin% = FALSE THEN
 			owin% = TRUE
-			rows%(Subscript%(i%, 0)) = TRUE
-			rows%(Subscript%(i%, 1)) = TRUE
-			rows%(Subscript%(i%, 2)) = TRUE
+
+			IF ChoicesComputerPlayer% THEN
+				rows%(Subscript%(i%, 0)) = TRUE
+				rows%(Subscript%(i%, 1)) = TRUE
+				rows%(Subscript%(i%, 2)) = TRUE
+			ELSE
+				highlight%(Subscript%(i%, 0)) = TRUE
+				highlight%(Subscript%(i%, 1)) = TRUE
+				highlight%(Subscript%(i%, 2)) = TRUE
+			ENDIF
 		ENDIF
 
 		REM If it's a row of Xs, flag an X win and set the squares in the
@@ -676,14 +685,14 @@ FOR position% = 0 TO MaxSquares%
 
 		IF type% = 12 THEN
 			IF owin% THEN
-				rows%() = FALSE
+				highlight%() = FALSE
 				owin% = FALSE
 			ENDIF
 
 			xwin% = TRUE
-			rows%(Subscript%(i%, 0)) = TRUE
-			rows%(Subscript%(i%, 1)) = TRUE
-			rows%(Subscript%(i%, 2)) = TRUE
+			highlight%(Subscript%(i%, 0)) = TRUE
+			highlight%(Subscript%(i%, 1)) = TRUE
+			highlight%(Subscript%(i%, 2)) = TRUE
 		ENDIF
 	NEXT i%
 
@@ -692,7 +701,8 @@ FOR position% = 0 TO MaxSquares%
 	Board%(position%) = saved%
 
 	REM If the computer player is active, score the grid with the trial
-	REM O in place and track the best option we can find.
+	REM O in place and track the best option we can find. If it's a winning
+	REM row, copy the highlight data into the live highlight array.
 
 	IF (Board%(position%) = Value%(Blank%)) AND ChoicesComputerPlayer% THEN
 		count%() = count%() * Weighting%()
@@ -701,7 +711,7 @@ FOR position% = 0 TO MaxSquares%
 		IF score% > maximum% THEN
 			maximum% = score%
 			best% = position%
-			highlight%() = rows%()
+			IF owin% THEN highlight%() = rows%()
 		ENDIF
 	ENDIF
 NEXT position%
