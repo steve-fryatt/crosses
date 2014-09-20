@@ -108,11 +108,11 @@ Second public release.
 <li><menu>Help</menu> menu entry added to iconbar menu.
 <li><icon>Website</icon> button added to <window>program information</window> window.
 <li>Support added for Interactive Help.
-<li>Menus remain open when selections are made with <mouse>adjust</mouse>.
-<li><window>Choices</window> dialogue made static and updated to follow Style Guide conventions. (Ticket #526)
+<li>Menus remain open when selections are made with <mouse>adjust</mouse>. (Ticket #500)
+<li><window>Choices</window> dialogue made static and updated to follow Style Guide conventions. (Ticket #528)
 <li>Updated application sprites.
 <li>Rationalised iconbar actions.
-<li>Added main window menu to start new games and reset scores.
+<li>Added main window menu to start new games and reset scores. (Ticket #527)
 <li>Updated to follow RISC&nbsp;OS&nbsp;3 conventions: don&rsquo;t waste time taking unwanted user messages or null events, and move private sprites out of the Wimp pool. (Ticket #526)
 <li>Add 3D game from <cite>XOX3D</cite>.
 </list>
