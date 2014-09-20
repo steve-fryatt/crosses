@@ -92,16 +92,16 @@ Here is a list of the versions of Crosses, along with all the changes made.
 First public release.
 
 
-<subhead title="1.10 (24 December 2004)">
+<subhead title="1.01 (24 December 2004)">
 
 <list>
 <li>Fixed bug which prevented correct scoring if a human beat the computer.
 </list>
 
 
-<subhead title="Test Build">
+<subhead title="1.10(21 September 2014)">
 
-Development release for testing and feedback.
+Second public release.
 
 <list>
 <li>Build system revised and license updated to EUPL.
