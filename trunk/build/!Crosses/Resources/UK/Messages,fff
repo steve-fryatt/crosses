@@ -1,0 +1,77 @@
+# Copyright 2014, Stephen Fryatt (info@stevefryatt.org.uk)
+#
+# This file is part of Crosses:
+#
+#   http://www.stevefryatt.org.uk/software/
+#
+# Licensed under the EUPL, Version 1.1 only (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+#
+# You may obtain a copy of the Licence at:
+#
+#   http://joinup.ec.europa.eu/software/page/eupl
+#
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis, WITHOUT WARRANTIES
+# OR CONDITIONS OF ANY KIND, either express or implied.
+#
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+
+TaskName:Crosses
+
+TaskSpr:!crosses
+
+SupportURL:http://www.stevefryatt.org.uk/software/games/
+
+URLFailed:Could not find an application to launch the given URL.
+
+Move:%0 to move
+Win:%0 wins game
+Draw:Game drawn
+Scores:Scores
+Of: (of %0)
+
+X:X
+O:O
+
+PlayerX:Player X
+PlayerO:Player O
+
+# Interactive Help Messages
+
+Help.IconBar:\TCrosses application.|MIt plays Noughts and Crosses.|M\Sstart a new game.
+
+Help.Main:\Tmain Crosses \w.|MIt plays the game of Noughts and Crosses.
+Help.Main.Grid:\Sto place an X or an O on the playing grid.
+Help.Main.Display:\Tinformation field.|MWatch the text for details of the game's progress.
+Help.Main.XScore:\Tscore for the player with X.
+Help.Main.OScore:\Tscore for the player with O.
+Help.Main.Score:\Tscoreboard.|MDepending on the configured options, it may also count the games that have been played.
+
+Help.Choices:\TChoices \w for Crosses.|MIt allows aspects of the game to be configured.
+Help.Choices.Set:\Sset the options for the current session and close the \w.|M\Aset the options and leave the \w open.
+Help.Choices.Cancel:\Sclose the \w and forget any changes made.|M\Areset any changes and leave the \w open.
+Help.Choices.XNameOpt:\Schoose whether a name can be set for the player for X.
+Help.Choices.ONameOpt:\Schoose whether a name can be set for the player for O.
+Help.Choices.XName:\Tname of the player for X.
+Help.Choices.OName:\Tname of the player for O.
+Help.Choices.OComp:\Schoose whether O will be played by a human or the computer.
+Help.Choices.Draws:\Schoose whether drawn games are counted in the scoreboard.|MIf yes, they will be attributed to both players.
+Help.Choices.Count:\Schoose whether the game count will be shown in the scoreboard.
+Help.Choices.3D:\Sselect a 2D or 3D game.|M2D is a standard 3 by 3 grid.|M3D is three 3 by 3 grids stacked on top of each other.
+
+Help.Info:\Tprogram information \w for the Crosses application.
+Help.Info.Website:\Tprogram information \w for the Crosses application.|M\Svisit its website for information and updates.
+
+Help.MainMenu.00:\Sstart a new game.
+Help.MainMenu.01:\Sreset the scoreboard.
+
+Help.IconBarMenu.00:\Rto see information about Crosses and visit its website.
+Help.IconBarMenu.01:\Sread the Crosses documentation.
+Help.IconBarMenu.02:\Schange the settings for Crosses.
+Help.IconBarMenu.03:\Squit Crosses.
+
+

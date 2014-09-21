@@ -1,0 +1,211 @@
+REM >!Crosses - Choices
+REM
+REM Copyright 2014, Stephen Fryatt (info@stevefryatt.org.uk)
+REM
+REM This file is part of Crosses:
+REM
+REM   http://www.stevefryatt.org.uk/software/
+REM
+REM Licensed under the EUPL, Version 1.1 only (the "Licence");
+REM You may not use this work except in compliance with the
+REM Licence.
+REM
+REM You may obtain a copy of the Licence at:
+REM
+REM   http://joinup.ec.europa.eu/software/page/eupl
+REM
+REM Unless required by applicable law or agreed to in
+REM writing, software distributed under the Licence is
+REM distributed on an "AS IS" basis, WITHOUT WARRANTIES
+REM OR CONDITIONS OF ANY KIND, either express or implied.
+REM
+REM See the Licence for the specific language governing
+REM permissions and limitations under the Licence.
+
+
+REM Initialise the choices module.
+REM
+REM This must be called while the Templates file is open.
+REM
+REM \TODO -- This relies on the global b%!
+:
+DEF PROCchoices_initialise
+LOCAL ind_area%, ind_size%
+
+REM Allocate indirected data memory for choices windows.
+
+ind_size% = 3000
+DIM ind_area% ind_size%
+
+REM Load the choices templates.
+
+PROCtemplate_load("Options", b%, indirected_data%, indirected_size%, -1)
+SYS "Wimp_CreateWindow",,b% TO ChoicesWindow%
+
+REM Set up the "exported" global variables.
+
+Choices3D% = FALSE
+ChoicesCountGames% = FALSE
+ChoicesScoreDraws% = FALSE
+ChoicesNamePlayerX% = FALSE
+ChoicesNamePlayerO% = FALSE
+ChoicesComputerPlayer% = TRUE
+ChoicesPlayerXName$ = FNmessage_lookup("PlayerX")
+ChoicesPlayerOName$ = FNmessage_lookup("PlayerO")
+ENDPROC
+
+
+REM Process mouse clicks in choices windows.
+REM
+REM \param b%			Mouse Event data block.
+REM \return			TRUE if we handled the event; else FALSE.
+:
+DEF FNchoices_process_mouse(b%)
+LOCAL processed%
+
+processed% = TRUE
+
+REM We only want to claim Select and Adjust clicks.
+
+IF b%!8 <> 1 AND b%!8 <> 4 THEN =FALSE
+
+CASE b%!12 OF
+WHEN ChoicesWindow%
+	SYS "Wimp_GetCaretPosition",, q%
+
+	CASE b%!16 OF
+	WHEN 7
+		PROCicon_set_shaded(ChoicesWindow%, 6, NOT FNicon_selected(ChoicesWindow%, 7))
+		IF FNicon_shaded(ChoicesWindow%, 6) AND !q% = ChoicesWindow% AND q%!4 = 6 THEN
+			IF NOT FNicon_shaded(ChoicesWindow%, 8) THEN
+				PROCicon_put_caret_at_end(ChoicesWindow%, 8)
+			ELSE
+				PROCicon_put_caret_at_end(ChoicesWindow%, -1)
+			ENDIF
+		ENDIF
+
+	WHEN 9
+		PROCicon_set_shaded(ChoicesWindow%, 8, NOT FNicon_selected(ChoicesWindow%, 9))
+		IF FNicon_shaded(ChoicesWindow%, 8) AND !q% = ChoicesWindow% AND q%!4 = 8 THEN
+			IF NOT FNicon_shaded(ChoicesWindow%, 6) THEN
+				PROCicon_put_caret_at_end(ChoicesWindow%, 6)
+			ELSE
+				PROCicon_put_caret_at_end(ChoicesWindow%, -1)
+			ENDIF
+		ENDIF
+
+	WHEN 13 : REM OK
+		PROCchoices_read_window
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
+		IF b%!8 = 4 THEN PROCwindow_close(ChoicesWindow%)
+
+	WHEN 14 : REM Cancel
+		IF b%!8 = 4 THEN
+			PROCwindow_close(ChoicesWindow%)
+		ELSE
+			PROCchoices_fill_window
+			IF !q% = ChoicesWindow% THEN
+				IF FNicon_shaded(ChoicesWindow%, q%!4) THEN
+					PROCicon_put_caret_at_end(ChoicesWindow%, -1)
+				ELSE
+					PROCicon_put_caret_at_end(ChoicesWindow%, q%!4)
+				ENDIF
+			ENDIF
+		ENDIF
+
+	ENDCASE
+
+OTHERWISE
+	processed% = FALSE
+ENDCASE
+
+=processed%
+
+
+REM Process keypresses in choices windows.
+REM
+REM \param b%			Keypress Event data block.
+REM \return			TRUE if we handled the event; else FALSE.
+:
+DEF FNchoices_process_keypress(b%)
+LOCAL processed%
+
+processed% = TRUE
+
+CASE b%!0 OF
+WHEN ChoicesWindow%
+	CASE b%!24 OF
+	WHEN 13
+		PROCchoices_read_window
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
+		PROCwindow_close(ChoicesWindow%)
+
+	WHEN 27
+		PROCwindow_close(ChoicesWindow%)
+
+	OTHERWISE
+		processed% = FALSE
+	ENDCASE
+
+OTHERWISE
+	processed% = FALSE
+ENDCASE
+
+=processed%
+
+
+REM Open the Choices dialogue on screen.
+REM
+REM \param x%			The X coordinate to open the dialogue at.
+REM \param y%			The Y coordinate to open the dialogue at.
+:
+DEF PROCchoices_open_window(x%, y%)
+
+PROCchoices_fill_window
+
+REM Open the window.
+
+PROCwindow_open_centred_at(ChoicesWindow%, x%, y%)
+
+CASE TRUE OF
+WHEN NOT FNicon_shaded(ChoicesWindow%, 6)
+	PROCicon_put_caret_at_end(ChoicesWindow%, 6)
+
+WHEN NOT FNicon_shaded(ChoicesWindow%, 6)
+	PROCicon_put_caret_at_end(ChoicesWindow%, 8)
+
+OTHERWISE
+	PROCicon_put_caret_at_end(ChoicesWindow%, -1)
+ENDCASE
+ENDPROC
+
+
+REM Copy the information from the configuration settings into the icons in the
+REM options window
+:
+DEF PROCchoices_fill_window
+PROCicon_set_indirected_text(ChoicesWindow%, 6, ChoicesPlayerXName$)
+PROCicon_set_shaded(ChoicesWindow%, 6, NOT ChoicesNamePlayerX%)
+PROCicon_set_indirected_text(ChoicesWindow%, 8, ChoicesPlayerOName$)
+PROCicon_set_shaded(ChoicesWindow%, 8, NOT ChoicesNamePlayerO%)
+PROCicon_set_selected(ChoicesWindow%, 7, ChoicesNamePlayerX%)
+PROCicon_set_selected(ChoicesWindow%, 9, ChoicesNamePlayerO%)
+PROCicon_set_selected(ChoicesWindow%, 10, ChoicesComputerPlayer%)
+PROCicon_set_selected(ChoicesWindow%, 11, ChoicesScoreDraws%)
+PROCicon_set_selected(ChoicesWindow%, 12, ChoicesCountGames%)
+PROCicon_set_selected(ChoicesWindow%, 15, Choices3D%)
+ENDPROC
+
+
+REM Read the contents of the Choices dialogue back into the settings variables.
+:
+DEF PROCchoices_read_window
+SYS "XOS_GenerateError", FNicon_indirection(ChoicesWindow%, 6) TO ChoicesPlayerXName$
+SYS "XOS_GenerateError", FNicon_indirection(ChoicesWindow%, 8) TO ChoicesPlayerOName$
+ChoicesNamePlayerX% = FNicon_selected(ChoicesWindow%, 7)
+ChoicesNamePlayerO% = FNicon_selected(ChoicesWindow%, 9)
+ChoicesComputerPlayer% = FNicon_selected(ChoicesWindow%, 10)
+ChoicesScoreDraws% = FNicon_selected(ChoicesWindow%, 11)
+ChoicesCountGames% = FNicon_selected(ChoicesWindow%, 12)
+Choices3D% = FNicon_selected(ChoicesWindow%, 15)
+ENDPROC

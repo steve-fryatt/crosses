@@ -1,0 +1,139 @@
+<document title="Crosses">
+<define name="version" value="1.10">
+<define name="date" value="6 December 2002" length=30 align="right">
+
+
+
+
+
+<literal mode="Text">
+=============================================================================
+Crosses - Noughts and Crosses                                    Version $$version$$
+
+(c) Stephen Fryatt, 1993-2014                  $$date$$
+=============================================================================
+
+</literal>
+
+
+
+
+
+<chapter title="License" file="License">
+
+<cite>Crosses</cite> is licensed under the EUPL, Version&nbsp;1.1 only (the &ldquo;Licence&rdquo;); you may not use this work except in compliance with the Licence.
+
+You may obtain a copy of the Licence at <link ref="#url http://joinup.ec.europa.eu/software/page/eupl">http://joinup.ec.europa.eu/software/page/eupl</link>
+
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an &ldquo;<strong>as is</strong>&rdquo; basis, <strong>without warranties or conditions of any kind</strong>, either express or implied.
+
+See the Licence for the specific language governing permissions and limitations under the Licence.
+
+The source for <cite>Crosses</cite> can be found alongside this binary download, at <link ref="#url http://www.stevefryatt.org.uk/software">http://www.stevefryatt.org.uk/software</link>
+
+The necessary libraries and build tools can be found at <link ref="#url http://www.stevefryatt.org.uk/software/build">http://www.stevefryatt.org.uk/software/build</link>
+
+</chapter>
+
+
+
+
+<chapter title="Installing Crosses" file="Install">
+
+<cite>Crosses</cite> requires RISC&nbsp;OS&nbsp;3.1 or later, and can be run off a hard disc or floppy disc. To install <cite>Crosses</cite> on a hard disc, copy the <file>!Crosses</file> application to a suitable place on your disc.
+
+</chapter>
+
+
+
+
+<chapter title="Using Crosses" file="Use">
+
+<cite>Crosses</cite> plays Noughts and Crosses. To start the application, double-click on <file>!Crosses</file> in the directory viewer to place it on the iconbar. Clicking <mouse>select</mouse> on its icon will open the game window.
+
+By default, <cite>Crosses</cite> presents a standard two-dimensional board with X moving first and the computer playing O. Click on a grid square to place an X; the computer will then place an O to follow it. If the computer player is turned off, clicks on the grid will alternately place Xs and Os.
+
+The game ends when either one of the players gets a row of three of their symbols, or the board is full; in the latter case, the game is considered a draw. The winning row (or rows) will be highlighted in the grid.
+
+A new game can be started by clicking <mouse>menu</mouse> over the game window and selecting <menu>New game</menu>; selecting <menu>Reset scores</menu> will reset the scoreboard. If the current game has finished, clicking <mouse>select</mouse> on Crosses&rsquo; iconbar icon will also start a new game.
+
+<subhead title="3D Games">
+
+In addition to the standard two-dimensional, three by three playing playing grid, <cite>Crosses</cite> can play a three-dimensional game. If the <icon>3D&nbsp;game</icon> option is selected in the <window>Choices</window> dialogue, then three grids are shown side-by-side. These are treated as being stacked on top of each other to form a cube: if an X were placed in the top-left square of each grid they would form a vertical row down through the cube.
+
+Playing in 3D is the same as playing in the more familiar 2D, except that there are now 49 possible winning rows instead of eight.
+
+<subhead title="Changing the game options">
+
+A number of options can be selected by selecting <menu>Choices...</menu> from the iconbar menu to access the <window>Choices</window> dialogue.
+
+The <icon>Player&nbsp;X</icon> and <icon>Player&nbsp;O</icon> sections allow the two players to be configured. Selecting <icon>Player&rsquo;s name</icon> allows a name to be entered into the field below: this will then be used instead of &ldquo;X&rdquo; and &ldquo;O&rdquo; in the game window.
+
+Under <icon>Player&nbsp;O</icon>, the <icon>Computer player</icon> option will allow the person playing O to be switched between human and computer.
+
+The <icon>Scoring</icon> section allows some control over the way that games are scored. The <icon>Score draws</icon> option controls whether drawn games count towards the scoreboard values (being attributed to both players). The <icon>Count games</icon> option can be turned on to display the number of games in the scoreboard.
+
+<icon>3D&nbsp;game</icon> selects a three-dimensional game, instead of the more conventional two-dimensional one.
+
+Once the options have been set, clicking <icon>Set</icon> will apply them. Clicking <icon>Cancel</icon> with <mouse>select</mouse> will forget any changes and close the dialogue; with <mouse>adjust</mouse> it will reset the dialogue to the state it was in when it was last opened. Any changes which directly affect the game will come into effect when the next new game is started.
+
+</chapter>
+
+
+
+
+<chapter title="Version History" file="History">
+
+Here is a list of the versions of Crosses, along with all the changes made.
+
+
+<subhead title="1.00 (26 May 1993)">
+
+First public release.
+
+
+<subhead title="1.01 (24 December 2004)">
+
+<list>
+<li>Fixed bug which prevented correct scoring if a human beat the computer.
+</list>
+
+
+<subhead title="1.10 (21 September 2014)">
+
+Second public release.
+
+<list>
+<li>Build system revised and license updated to EUPL.
+<li><menu>Help</menu> menu entry added to iconbar menu.
+<li><icon>Website</icon> button added to <window>program information</window> window.
+<li>Support added for Interactive Help.
+<li>Menus remain open when selections are made with <mouse>adjust</mouse>. (Ticket #500)
+<li><window>Choices</window> dialogue made static and updated to follow Style Guide conventions. (Ticket #528)
+<li>Updated application sprites.
+<li>Rationalised iconbar actions.
+<li>Added main window menu to start new games and reset scores. (Ticket #527)
+<li>Updated to follow RISC&nbsp;OS&nbsp;3 conventions: don&rsquo;t waste time taking unwanted user messages or null events, and move private sprites out of the Wimp pool. (Ticket #526)
+<li>Add 3D game from <cite>XOX3D</cite>.
+</list>
+
+</chapter>
+
+
+
+
+<literal mode="Text">
+
+Updates and Contacting Me
+-------------------------
+
+  If you have any comments about Crosses, or would like to report any bugs
+  that you find, you can email me at the address below.
+
+  Updates to Crosses and more programs for RISC OS computers can be found
+  on my website at http://www.stevefryatt.org.uk/software/
+
+  Stephen Fryatt
+  email: steve@stevefryatt.org.uk
+</literal>
+

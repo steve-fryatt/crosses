@@ -1,0 +1,735 @@
+REM >!Crosses
+REM
+REM Copyright 1993-2014, Stephen Fryatt (info@stevefryatt.org.uk)
+REM
+REM This file is part of Crosses:
+REM
+REM   http://www.stevefryatt.org.uk/software/
+REM
+REM Licensed under the EUPL, Version 1.1 only (the "Licence");
+REM You may not use this work except in compliance with the
+REM Licence.
+REM
+REM You may obtain a copy of the Licence at:
+REM
+REM   http://joinup.ec.europa.eu/software/page/eupl
+REM
+REM Unless required by applicable law or agreed to in
+REM writing, software distributed under the Licence is
+REM distributed on an "AS IS" basis, WITHOUT WARRANTIES
+REM OR CONDITIONS OF ANY KIND, either express or implied.
+REM
+REM See the Licence for the specific language governing
+REM permissions and limitations under the Licence.
+
+LIBRARY "BASIC:Icon"
+LIBRARY "BASIC:Menu"
+LIBRARY "BASIC:Message"
+LIBRARY "BASIC:Resources"
+LIBRARY "BASIC:Template"
+LIBRARY "BASIC:Url"
+LIBRARY "BASIC:WimpError"
+LIBRARY "BASIC:WimpSprite"
+LIBRARY "BASIC:Window"
+
+LIBRARY "src/Choices.bbt"
+
+PROCwimperror_initialise("Crosses", "!crosses")
+ON ERROR result% = FNwimperror_program : END
+
+REM These values get replaced by tokenize.
+
+build_version$ = "1.10"
+build_date$ = "01 Jul 2009"
+
+PROCinitialise
+
+ON ERROR Quit% = FNwimperror_program
+
+WHILE NOT Quit%
+	PROCpoll
+ENDWHILE
+
+SYS "Wimp_CloseDown"
+END
+
+
+REM Handle calls to Wimp_Poll and process the responses.
+:
+DEF PROCpoll
+LOCAL reason%
+
+SYS "Wimp_Poll", &3C01, b% TO reason%
+
+CASE reason% OF
+	WHEN 2		: SYS "Wimp_OpenWindow",,b%
+	WHEN 3		: SYS "Wimp_CloseWindow",,b%
+	WHEN 6		: PROCmouse_click(b%)
+	WHEN 8		: PROCkey_press(b%)
+	WHEN 9		: PROCmenu_selection(b%)
+	WHEN 17, 18	: PROCuser_message(b%)
+	WHEN 19		: IF b%!16 = &4AF80 THEN PROCurl_bounce(b%)
+ENDCASE
+ENDPROC
+
+
+REM Process mouse clicks in windows.
+REM
+REM \param b%		The mouse click event data block.
+:
+DEF PROCmouse_click(b%)
+
+REM Pass the event details around any code modules that might be interested.
+
+IF FNchoices_process_mouse(b%) THEN ENDPROC
+
+CASE b%!12 OF
+WHEN -2
+	CASE b%!8 OF
+	WHEN 4
+		IF NOT Playing% THEN
+			PROCnew_game
+			PROCopen_main_window
+		ELSE
+			PROCwindow_open(MainWindow%)
+		ENDIF
+	WHEN 2
+		PROCmenu_create_iconbar(IconbarMenu%, !b%)
+	ENDCASE
+
+WHEN MainWindow%
+	CASE b%!8 OF
+	WHEN 4
+		IF b%!16 >= 0 AND b%!16 <= MaxSquares% THEN PROCplay_square(b%!16)
+
+	WHEN 2
+		PROCmenu_create(MainMenu%, !b%, b%!4)
+	ENDCASE
+
+WHEN InfoWindow%
+	IF b%!8 = 4 AND b%!16 = 8 THEN
+		PROCurl_launch(FNmessage_lookup("SupportURL"))
+		PROCmenu_create(-1, 0, 0)
+	ENDIF
+ENDCASE
+ENDPROC
+
+
+REM Process keypresses in windows.
+REM
+REM \param		The keypress event data block.
+:
+DEF PROCkey_press(block%)
+
+REM Pass the event details around any code modules that might be interested.
+
+IF FNchoices_process_keypress(b%) THEN ENDPROC
+
+SYS "Wimp_ProcessKey",block%!24
+ENDPROC
+
+
+REM Process selections from menus.
+REM
+REM \param		The menu selection block.
+:
+DEF PROCmenu_selection(block%)
+LOCAL reopen%
+
+SYS "Wimp_GetPointerInfo",,q%
+reopen% = (q%!8 = 1)
+
+CASE FNmenu_current_handle OF
+WHEN MainMenu%
+	CASE !block% OF
+	WHEN 0
+		PROCnew_game
+		PROCopen_main_window
+	WHEN 1
+		PROCreset_scores
+	ENDCASE
+
+WHEN IconbarMenu%
+	CASE !block% OF
+		WHEN 1	: OSCLI("%Filer_Run <Crosses$Dir>.!Help")
+		WHEN 2	: PROCchoices_open_window(q%!0, q%!4)
+		WHEN 3	: Quit% = TRUE
+	ENDCASE
+ENDCASE
+
+IF reopen% THEN PROCmenu_create(FNmenu_current_handle, 0, 0)
+ENDPROC
+
+
+REM Process incoming user messages.
+REM
+REM \param		The user message block.
+:
+DEF PROCuser_message(block%)
+CASE block%!16 OF
+	WHEN 0		: Quit% = TRUE
+	WHEN &502	: PROCsend_interactive_help(b%)
+	WHEN &4E383	: PROCurl_bounce(b%)
+ENDCASE
+ENDPROC
+
+
+REM Process requests for interactive help text.
+REM
+REM \param message%		Pointer to the Message_HelpRequest block.
+:
+DEF PROCsend_interactive_help(message%)
+LOCAL root$, suffix$, found%, message$
+
+REM Compare the window handle to the windows we know about, and find the
+REM relevant token name.
+
+CASE message%!32 OF
+	WHEN -2			: root$ = "IconBar"
+	WHEN MainWindow%	: root$ = "Main"
+	WHEN InfoWindow%	: root$ = "Info"
+	WHEN ChoicesWindow%	: root$ = "Choices"
+	OTHERWISE		: root$ = ""
+ENDCASE
+
+REM Look up the help text, either as a window message or by checking the
+REM menus that belong to us.
+
+IF root$ <> "" THEN
+	suffix$ = FNicon_validation_command(message%!32, message%!36, "N")
+
+	REM If there's a name in the validation string, use that; otherwise
+	REM check to see if there's a special case to set up.
+
+	IF suffix$ <> "" THEN
+		root$ += "." + suffix$
+	ELSE
+		IF message%!32 = MainWindow% AND message%!36 >= 0 AND message%!36 <= 26 THEN root$ += ".Grid"
+	ENDIF
+	found% = FNmessage_lookup_result("Help." + root$, message$)
+ELSE
+	SYS "Wimp_GetMenuState", 1, q%, message%!32, message%!36
+	CASE FNmenu_current_handle OF
+		WHEN MainMenu%		: root$ = "MainMenu." + RIGHT$("00" + STR$(!q%), 2)
+		WHEN IconbarMenu%	: root$ = "IconBarMenu." + RIGHT$("00" + STR$(!q%), 2)
+	ENDCASE
+	
+	IF root$ <> "" THEN found% = FNmessage_lookup_result("Help." + root$, message$)
+ENDIF
+
+REM If no message was found, give up now.
+
+IF NOT found% THEN ENDPROC
+
+REM If a message was found, send it back to the requestor.
+
+message%!12 = message%!8
+message%!16 = &503
+$(message% + 20) = message$ + CHR$(0)
+!message% = 24+(LEN(message$) AND &FFFFFC)
+SYS "Wimp_SendMessage", 17, message%, message%!4
+ENDPROC
+
+
+REM Open (or re-open) the main window at the top of the stack, taking into
+REM account the 2D or 3D settings.
+:
+DEF PROCopen_main_window
+LOCAL m%, n%, width%
+
+REM Get the current screen width
+
+SYS "OS_ReadModeVariable", -1, 11 TO ,,m%
+SYS "OS_ReadModeVariable", -1, 4  TO ,,n%
+
+width% = m% << n%
+
+REM Get the current window state.
+
+!q% = MainWindow%
+SYS "Wimp_GetWindowState",,q%
+
+REM Adjust the window position if the width doesn't match the current
+REM 2D/3D settings.
+
+IF Choices3D% THEN
+	IF (q%!12 - q%!4) <> Window3DWidth% THEN
+		q%!4 = q%!4 - Window2DOffset%
+		q%!12 = q%!4 + Window3DWidth%
+		q%!20 = 0
+
+		REM Force the window back on screen if necessary.
+
+		CASE TRUE OF
+		WHEN q%!4 < 0
+			q%!4 = 0
+			q%!12 = Window3DWidth%
+		WHEN q%!12 >= width%
+			q%!12 = width%
+			q%!4 = q%!12 - Window3DWidth%
+		ENDCASE
+	ENDIF
+ELSE
+	IF (q%!12 - q%!4) <> Window2DWidth% THEN
+		q%!4 = q%!4 + Window2DOffset%
+		q%!12 = q%!4 + Window2DWidth%
+		q%!20 = Window2DOffset%
+	ENDIF
+ENDIF
+
+REM Open the window.
+
+q%!28=-1
+SYS "Wimp_OpenWindow",,q%
+ENDPROC
+
+
+REM Initialise ourselves, internally and with the Wimp.
+:
+DEF PROCinitialise
+LOCAL i%, j%, resources$, task_name$, task_sprite$, indirected_data%, indirected_size%, ibar_icon%
+
+REM Set up the quit flag and global data blocks.
+
+Quit% = FALSE
+
+DIM b% 4000, q% 255, a% 255
+
+REM Locate the application resources.
+
+resources$ = FNresources_find_territory_folder("<Crosses$Dir>.Resources")
+
+REM Load the messages file.
+
+PROCmessage_initialise(resources$ + "Messages")
+
+task_name$ = FNmessage_lookup("TaskName")
+task_sprite$ = FNmessage_lookup("TaskSpr")
+PROCwimperror_initialise(task_name$, task_sprite$)
+
+REM Initialise with the Wimp.
+
+q%!0 = &502
+q%!4 = &4E383
+q%!8 = &4AF80
+q%!12 = 0
+
+SYS "Wimp_Initialise", 310, &4B534154, task_name$, q%
+
+REM Load the application sprites.
+
+SpriteArea% = FNwimpsprite_load_user_sprites("<Crosses$Dir>.SpriteFile")
+
+REM Load the window templates
+
+indirected_size% = 2048
+DIM indirected_data% indirected_size%
+
+PROCtemplate_open(resources$ + "Templates")
+PROCtemplate_load("Board", b%, indirected_data%, indirected_size%, -1)
+b%!64 = SpriteArea%
+FOR i% = 0 TO 26
+	b%!(88 + 32*i% + 24) = SpriteArea%
+NEXT i%
+SYS "Wimp_CreateWindow",,b% TO MainWindow%
+Window2DWidth% = b%!8 - b%!0
+Window3DWidth% = b%!48 - b%!40
+Window2DOffset% = b%!16
+PROCtemplate_load("ProgInfo", b%, indirected_data%, indirected_size%, -1)
+SYS "Wimp_CreateWindow",,b% TO InfoWindow%
+PROCchoices_initialise
+PROCtemplate_close
+
+$FNicon_indirection(InfoWindow%, 4) = CHR$(169) + " Stephen Fryatt, 1993-" + MID$(build_date$, 8)
+$FNicon_indirection(InfoWindow%, 6) = build_version$ + " (" + build_date$ + ")"
+
+REM Initialise and load the menu templates
+
+PROCmenu_initialise
+
+b%!0 = InfoWindow%
+PROCmenu_load_templates(resources$ + "Menus", b%)
+IconbarMenu% = b%!0
+MainMenu% = b%!4
+
+REM The following values are indexes for the arrays which follow.
+
+Blank% = 0
+Nought% = 1
+Cross% = 2
+
+REM The sprites used to represent the marks on the playing board.
+
+DIM Sprite$(2)
+Sprite$() = "-", "o", "x"
+
+REM The values used to represent the marks on the playing board.
+
+DIM Value%(2)
+Value%() = 0, 1, 4
+
+REM The board representation.
+
+DIM Board%(26)
+Board%() = 0
+
+REM The subscripts into Board%() which make up the possible rows of three
+REM squares that can be played.
+
+DIM Subscript%(48, 2)
+
+FOR i% = 0 TO 48
+	FOR j% = 0 TO 2
+		READ Subscript%(i%, j%)
+	NEXT j%
+NEXT i%
+
+REM The main grid: rows, columns and diagonals.
+
+DATA 0,1,2,    3,4,5,    6,7,8
+DATA 0,3,6,    1,4,7,    2,5,8
+DATA 0,4,8,    2,4,6
+
+REM The top grid: rows, columns and diagonals.
+
+DATA 9,10,11,  12,13,14, 15,16,17
+DATA 9,12,15,  10,13,16, 11,14,17
+DATA 9,13,17,  11,13,15
+
+REM The bottom grid: rows, columns and diagonals.
+
+DATA 18,19,20, 21,22,23, 24,25,26
+DATA 18,21,24, 19,22,25, 20,23,26
+DATA 18,22,26, 20,22,24
+
+REM Columns down through the grids.
+
+DATA 9,0,18,   10,1,19,  11,2,20
+DATA 12,3,21,  13,4,22,  14,5,23
+DATA 15,6,24,  16,7,25,  17,8,26
+
+REM Diagonals front to back down through the grids.
+
+DATA 9,3,24,   10,4,25,  11,5,26
+DATA 15,3,18,  16,4,19,  17,5,20
+
+REM Diagonals from left to right down through the grid.
+
+DATA 9,1,20,   12,4,23,  15,7,26
+DATA 11,1,18,  14,4,21,  17,7,24
+
+REM Diagonal diagonals down through the grid.
+
+DATA 9,4,26,   17,4,18
+DATA 11,4,24,  15,4,20
+
+REM The row type weightings used when calculating move scores.
+
+DIM Weighting%(12)
+Weighting%() = 0,7,13,128,-15,0,0,0,-63,0,0,0,0
+
+REM Global variables used by the game code.
+
+Playing% = FALSE
+CurrentPlayer% = FALSE
+Moves% = 0
+
+PROCreset_scores
+
+ibar_icon% = FNicon_create_standard_bar(-1, task_sprite$)
+ENDPROC
+
+
+REM Draw the contents of a grid square.
+REM
+REM \param square%		The square (0 to 8) to draw.
+REM \param shape%		The shape index to place in teh square.
+:
+DEF PROCdraw_square(square%, shape%)
+IF square% < 0 OR square% > MaxSquares% OR shape% < 0 OR shape% > 2 THEN ENDPROC
+
+Board%(square%) = Value%(shape%)
+
+PROCicon_set_indirected_text(MainWindow%, square%, Sprite$(shape%))
+PROCicon_redraw(MainWindow%, square%)
+ENDPROC
+
+
+REM Highlight grid squares as indicated by a supplied list of selections.
+REM
+REM \param highlight%()		A list of board squares: TRUE to highlight, or
+REM				FALSE to leave alone.
+
+DEF PROChighlight_squares(highlight%())
+LOCAL i%
+
+FOR i% = 0 TO MaxSquares%
+	IF highlight%(i%) THEN
+		CASE Board%(i%) OF
+		WHEN Value%(Nought%)
+			PROCicon_set_indirected_text(MainWindow%, i%, Sprite$(Nought%) + "h")
+			PROCicon_redraw(MainWindow%, i%)
+
+		WHEN Value%(Cross%)
+			PROCicon_set_indirected_text(MainWindow%, i%, Sprite$(Cross%) + "h")
+			PROCicon_redraw(MainWindow%, i%)
+
+		ENDCASE
+	ENDIF
+NEXT i%
+ENDPROC
+
+
+REM Write a message to the message field below the playing grid.
+REM
+REM \param colour%		The Wimp colour to use for the text.
+REM \param text$		The text of the message to write.
+:
+DEF PROCwrite_message(colour%, text$)
+PROCicon_set_indirected_text(MainWindow%, 27, text$)
+PROCicon_set_colours(MainWindow%, 27, colour%, 1)
+ENDPROC
+
+
+REM Write the scores and the number of games to the scores field in the
+REM main window.
+REM
+REM \param xscore%		The score for player X.
+REM \param oscore%		The score for player O.
+REM \param games%		The number of games played.
+:
+DEF PROCwrite_scores(xscore%, oscore%, games%)
+LOCAL scores$
+
+PROCicon_set_indirected_text(MainWindow%, 29, STR$(xscore%))
+PROCicon_set_indirected_text(MainWindow%, 30, STR$(oscore%))
+
+scores$ = FNmessage_lookup("Scores")
+IF ChoicesCountGames% THEN scores$ += FNmessage_param_lookup("Of", STR$(games%), "", "", "")
+PROCicon_set_indirected_text(MainWindow%, 28, scores$)
+
+PROCicon_redraw(MainWindow%, 28)
+PROCicon_redraw(MainWindow%, 29)
+PROCicon_redraw(MainWindow%, 30)
+ENDPROC
+
+
+REM Reset the games count and the players' scores.
+:
+DEF PROCreset_scores
+ScoreX% = 0
+ScoreO% = 0
+GamesPlayed%=0
+PROCwrite_scores(0, 0, 0)
+ENDPROC
+
+
+REM Reset the playing board, and start a new game.
+:
+DEF PROCnew_game
+LOCAL i%
+
+Moves%=0
+Playing% = TRUE
+CurrentPlayer% = TRUE
+IF Choices3D% THEN
+	MaxSquares% = 26
+	MaxRows% = 48
+	MaxMoves% = 14
+ELSE
+	MaxSquares% = 8
+	MaxRows% = 7
+	MaxMoves% = 5
+ENDIF
+
+FOR i% = 0 TO MaxSquares%
+	PROCdraw_square(i%, Blank%)
+NEXT i%
+
+PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+ENDPROC
+
+
+REM Play a square on the board, assigning it to the current player.
+REM
+REM \param square%		The square to play (0 to 8).
+:
+DEF PROCplay_square(square%)
+LOCAL highlight%(), xwin%, owin%, computer%
+DIM highlight%(MaxSquares%)
+
+IF Playing% AND Board%(square%) = Value%(Blank%) THEN
+	REM Play the current mouse click.
+
+	IF CurrentPlayer% THEN
+		PROCdraw_square(square%, Cross%)
+		PROCwrite_message(10, FNmessage_param_lookup("Move", FNget_o_name, "", "", ""))
+		Moves% += 1
+	ELSE
+		PROCdraw_square(square%, Nought%)
+		PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+	ENDIF
+
+	REM Change players.
+
+	CurrentPlayer% = NOT CurrentPlayer%
+
+	REM Calculate the board, and find the computer's move for O.
+
+	computer% = FNcalculate(xwin%, owin%, highlight%())
+
+	REM If the computer player is active, and the game isn't over,
+	REM play the identified move.
+
+	IF Moves% < MaxMoves% AND (NOT xwin%) AND ChoicesComputerPlayer% THEN
+		PROCdraw_square(computer%, Nought%)
+		PROCwrite_message(11, FNmessage_param_lookup("Move", FNget_x_name, "", "", ""))
+
+		CurrentPlayer% = NOT CurrentPlayer%
+	ENDIF
+
+	REM If there has been a win, process it.
+
+	IF xwin% OR owin% OR Moves% >= MaxMoves% THEN
+		Playing% = FALSE
+
+		CASE TRUE OF
+		WHEN xwin%
+			PROCwrite_message(11, FNmessage_param_lookup("Win", FNget_x_name, "", "", ""))
+			ScoreX% += 1
+
+		WHEN owin%
+			PROCwrite_message(10, FNmessage_param_lookup("Win", FNget_o_name, "", "", ""))
+			ScoreO% += 1
+
+		OTHERWISE
+			PROCwrite_message(7, FNmessage_lookup("Draw"))
+			IF ChoicesScoreDraws% THEN
+				ScoreX% += 1
+				ScoreO% += 1
+			ENDIF
+
+		ENDCASE
+
+		PROChighlight_squares(highlight%())
+
+		IF GamesPlayed% < 99 THEN GamesPlayed% += 1
+		PROCwrite_scores(ScoreX%, ScoreO%, GamesPlayed%)
+	ENDIF
+ENDIF
+ENDPROC
+
+
+REM Run a calculation on the playing board, looking for winning lines
+REM and identifying a move for the computer player.
+REM
+REM \param xwin%		TRUE if X has won; FALSE if not.
+REM \param owin%		TRUE if O has won; FALSE if not.
+REM \param highlight%()		Return a list of winning squares.
+REM \return			The best next move for O, or -1 for none.
+:
+DEF FNcalculate(RETURN xwin%, RETURN owin%, RETURN highlight%())
+LOCAL count%(), rows%(), best%, maximum%, position%, i%, score%, type%, saved%
+
+DIM count%(12), rows%(DIM(highlight%(), 1))
+best% = -1
+
+maximum% = -1000
+xwin% = FALSE
+owin% = FALSE
+highlight%() = FALSE
+
+FOR position% = 0 TO MaxSquares%
+	saved% = Board%(position%)
+
+	REM If the computer player is active, place an O in the position
+	REM before totalling up the scores.
+
+	IF (Board%(position%) = Value%(Blank%)) AND ChoicesComputerPlayer% THEN Board%(position%) = Value%(Nought%)
+
+	REM Count each of the rows on the grid.
+
+	count%() = 0
+	rows%() = FALSE
+
+	FOR i% = 0 TO MaxRows%
+		type% = Board%(Subscript%(i%, 0)) + Board%(Subscript%(i%, 1)) + Board%(Subscript%(i%, 2))
+		count%(type%) = count%(type%) + 1
+
+		REM If it's a row of Os, and a row of Xs hasn't yet been found,
+		REM flag an O win and set the squares in the row to be highlighted.
+		REM If the computer player is active, do this in a 'safe' array
+		REM until we know that this move is the one we're going for.
+
+		IF type% = 3 AND xwin% = FALSE THEN
+			owin% = TRUE
+
+			IF ChoicesComputerPlayer% THEN
+				rows%(Subscript%(i%, 0)) = TRUE
+				rows%(Subscript%(i%, 1)) = TRUE
+				rows%(Subscript%(i%, 2)) = TRUE
+			ELSE
+				highlight%(Subscript%(i%, 0)) = TRUE
+				highlight%(Subscript%(i%, 1)) = TRUE
+				highlight%(Subscript%(i%, 2)) = TRUE
+			ENDIF
+		ENDIF
+
+		REM If it's a row of Xs, flag an X win and set the squares in the
+		REM row to be highlighted.
+		REM
+		REM If an O win has already been found, clear it and any highlight,
+		REM as if there's both a row of Xs and a row of Os, the Xs must
+		REM have been put there by the player while the Os will be a look-
+		REM ahead by the computer player and therefore don't yet exist.
+
+		IF type% = 12 THEN
+			IF owin% THEN
+				highlight%() = FALSE
+				owin% = FALSE
+			ENDIF
+
+			xwin% = TRUE
+			highlight%(Subscript%(i%, 0)) = TRUE
+			highlight%(Subscript%(i%, 1)) = TRUE
+			highlight%(Subscript%(i%, 2)) = TRUE
+		ENDIF
+	NEXT i%
+
+	REM Remove any change that we've just made.
+
+	Board%(position%) = saved%
+
+	REM If the computer player is active, score the grid with the trial
+	REM O in place and track the best option we can find. If it's a winning
+	REM row, copy the highlight data into the live highlight array.
+
+	IF (Board%(position%) = Value%(Blank%)) AND ChoicesComputerPlayer% THEN
+		count%() = count%() * Weighting%()
+		score% = SUM(count%())
+
+		IF score% > maximum% THEN
+			maximum% = score%
+			best% = position%
+			IF owin% THEN highlight%() = rows%()
+		ENDIF
+	ENDIF
+NEXT position%
+=best%
+
+
+REM Return a name to use for X's player.
+REM
+REM \return			The name to use for X.
+:
+DEF FNget_x_name
+IF ChoicesNamePlayerX% THEN =ChoicesPlayerXName$ ELSE =FNmessage_lookup("X")
+
+
+REM Return a name to use for O's player.
+REM
+REM \return			The name to use for O.
+:
+DEF FNget_o_name
+IF ChoicesNamePlayerO% THEN =ChoicesPlayerOName$ ELSE =FNmessage_lookup("O")
+
