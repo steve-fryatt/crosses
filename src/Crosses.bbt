@@ -131,7 +131,7 @@ ENDPROC
 
 REM Process selections from menus.
 REM
-REM \param		The menu selection block.
+REM \param block%		The menu selection block.
 :
 DEF PROCmenu_selection(block%)
 LOCAL reopen%
@@ -163,7 +163,7 @@ ENDPROC
 
 REM Process incoming user messages.
 REM
-REM \param		The user message block.
+REM \param block%		The user message block.
 :
 DEF PROCuser_message(block%)
 CASE block%!16 OF
