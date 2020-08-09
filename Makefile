@@ -1,4 +1,4 @@
-# Copyright 2014-2016, Stephen Fryatt (info@stevefryatt.org.uk)
+# Copyright 2014-2020, Stephen Fryatt (info@stevefryatt.org.uk)
 #
 # This file is part of Crosses:
 #
@@ -27,6 +27,9 @@
 ARCHIVE := crosses
 
 APP := !Crosses
+
+PACKAGE := Crosses
+PACKAGELOC := Games
 
 SRCS := Crosses.bbt Choices.bbt
 

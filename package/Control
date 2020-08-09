@@ -1,0 +1,14 @@
+Package: Crosses
+Version: 1.11-1
+Section: Games
+Priority: Optional
+Maintainer: Stephen Fryatt <info@stevefryatt.org.uk>
+Standards-Version: 0.6.0
+Environment: any
+Licence: Free
+Description: Noughts and Crosses on the Desktop
+ Crosses is a desktop version of Noughts and Crosses, which plays the familiar
+ two-dimensional game as well as a more tricky three-dimensional version. You
+ can play against another human or the computer.
+Homepage: http://www.stevefryatt.org.uk/software/games/
+Components: Apps.Games.!Crosses (Movable)
