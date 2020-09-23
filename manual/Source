@@ -10,7 +10,7 @@
 =============================================================================
 Crosses - Noughts and Crosses                                    Version $$version$$
 
-(c) Stephen Fryatt, 1993-2017                  $$date$$
+(c) Stephen Fryatt, 1993-2020                  $$date$$
 =============================================================================
 
 </literal>
@@ -89,7 +89,7 @@ Here is a list of the versions of Crosses, along with all the changes made.
 
 <subhead title="1.00 (26 May 1993)">
 
-First public release.
+First stable release.
 
 
 <subhead title="1.01 (24 December 2004)">
@@ -101,7 +101,7 @@ First public release.
 
 <subhead title="1.10 (21 September 2014)">
 
-Second public release.
+Second stable release.
 
 <list>
 <li>Build system revised and license updated to EUPL.
@@ -120,13 +120,22 @@ Second public release.
 
 <subhead title="1.11 (5 March 2017)">
 
-Update to second public release.
+Update to second stable release.
 
 <list>
 <li>Fix <file>!Help</file> so that <menu>Help</menu> menu items work correctly.
 <li>Tidy up icon creation and Wimp message handling code.
 </list>
 
+
+<subhead title="1.12 (23 September 2020)">
+
+Update to second stable release.
+
+<list>
+<li>Licence updated to EUPL&nbsp;v1.2.
+<li>Use ResConf-style system variables to identify resources.
+</list>
 </chapter>
 
 
@@ -144,6 +153,6 @@ Updates and Contacting Me
   on my website at http://www.stevefryatt.org.uk/software/
 
   Stephen Fryatt
-  email: steve@stevefryatt.org.uk
+  email: info@stevefryatt.org.uk
 </literal>
 
